@@ -1,4 +1,5 @@
 import { Header } from "@/components/Header/Header";
+import { Hero } from "@/components/Hero/Hero";
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (

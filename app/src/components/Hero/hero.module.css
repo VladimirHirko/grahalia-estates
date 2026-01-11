@@ -1,0 +1,77 @@
+.hero {
+  padding: 42px 0 22px;
+}
+
+.inner {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 34px;
+  align-items: center;
+}
+
+.copy {
+  animation: rise var(--dur-3) var(--ease) both;
+}
+
+.kicker {
+  color: var(--accent);
+  font-size: 12px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin: 0 0 10px;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: var(--hero-title);
+  line-height: 1.05;
+  letter-spacing: 0.2px;
+  margin: 0 0 14px;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: var(--hero-subtitle);
+  margin: 0 0 20px;
+  max-width: 52ch;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.visual {
+  animation: fade var(--dur-3) var(--ease) both;
+}
+
+.imageWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+/* мобилка */
+@media (max-width: 900px) {
+  .inner {
+    grid-template-columns: 1fr;
+  }
+  .hero {
+    padding: 26px 0 10px;
+  }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
