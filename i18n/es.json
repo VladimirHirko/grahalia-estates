@@ -1,0 +1,75 @@
+{
+  "header": {
+    "nav": {
+      "home": "Inicio",
+      "properties": "Propiedades",
+      "services": "Servicios",
+      "about": "Sobre nosotros",
+      "contact": "Contacto"
+    },
+    "menuTitle": "Menú",
+    "whatsapp": "WhatsApp"
+  },
+  "hero": {
+    "titleA": "Encuentra tu casa soñada",
+    "titleB": "en España",
+    "subtitle": "Propiedades de lujo en venta e inversión",
+    "ctaPrimary": "Ver propiedades",
+    "ctaSecondary": "Contáctanos"
+  },
+  "featured": {
+    "title": "Propiedades destacadas",
+    "subtitle": "Descubre nuestras últimas novedades",
+    "cta": "Ver todas las propiedades",
+    "card": {
+      "beds": "Habitaciones",
+      "baths": "Baños",
+      "details": "Ver detalles"
+    }
+  },
+  "services": {
+    "title": "Nuestros servicios",
+    "subtitle": "Soluciones inmobiliarias personalizadas",
+    "items": [
+      { "title": "Venta de propiedades", "text": "Te ayudamos a encontrar la casa perfecta.", "icon": "🏡" },
+      { "title": "Consultoría de inversión", "text": "Asesoramiento experto en inversiones rentables.", "icon": "📈" },
+      { "title": "Asesoramiento legal", "text": "Gestión completa de trámites y documentación.", "icon": "📄" }
+    ]
+  },
+  "about": {
+    "title": "Sobre nosotros",
+    "subtitle": "Tu agencia inmobiliaria de confianza en la Costa del Sol",
+    "body": "Ofrecemos un servicio excepcional y un profundo conocimiento local para ayudarte a encontrar la propiedad ideal en la Costa del Sol. Desde la elección de la zona perfecta hasta la negociación y todos los trámites legales, te acompañamos en cada paso con claridad y profesionalidad.",
+    "cta": "Saber más"
+  },
+  "contact": {
+    "title": "Ponte en contacto",
+    "subtitle": "¿Listo para encontrar tu casa soñada?",
+    "form": {
+      "name": "Tu nombre",
+      "phone": "Teléfono",
+      "email": "Correo electrónico",
+      "message": "Mensaje",
+      "send": "Enviar mensaje",
+      "namePlaceholder": "Nombre",
+      "phonePlaceholder": "+34 ...",
+      "emailPlaceholder": "tu@email.com",
+      "messagePlaceholder": "Cuéntanos qué estás buscando..."
+    },
+    "info": {
+      "title": "Contacto",
+      "whatsapp": "Escríbenos por WhatsApp",
+      "note": "Normalmente respondemos en pocas horas en días laborables."
+    },
+    "footerRights": "Todos los derechos reservados"
+  },
+  "seo": {
+    "siteName": "Grahalia Estates",
+    "home": {
+      "title": "Grahalia Estates — Inmobiliaria en la Costa del Sol",
+      "description": "Agencia inmobiliaria cálida y minimalista. Encuentra propiedades y solicita información.",
+      "ogTitle": "Grahalia Estates — Inmobiliaria en la Costa del Sol",
+      "ogDescription": "Agencia inmobiliaria cálida y minimalista. Encuentra propiedades y solicita información."
+    }
+  }
+}

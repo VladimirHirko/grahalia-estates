@@ -1,0 +1,1 @@
+ALTER TABLE "properties" ALTER COLUMN "slug" SET DATA TYPE varchar(255);

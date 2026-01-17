@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16
+    container_name: grahalia_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: grahalia
+      POSTGRES_PASSWORD: grahalia_password
+      POSTGRES_DB: grahalia_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - grahalia_pgdata:/var/lib/postgresql/data
+
+volumes:
+  grahalia_pgdata:

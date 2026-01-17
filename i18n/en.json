@@ -1,0 +1,75 @@
+{
+  "header": {
+    "nav": {
+      "home": "Home",
+      "properties": "Properties",
+      "services": "Services",
+      "about": "About",
+      "contact": "Contact"
+    },
+    "menuTitle": "Menu",
+    "whatsapp": "WhatsApp"
+  },
+  "hero": {
+    "titleA": "Find Your Dream Home",
+    "titleB": "in Spain",
+    "subtitle": "Luxury Properties for Sale & Investment",
+    "ctaPrimary": "View Properties",
+    "ctaSecondary": "Contact Us"
+  },
+  "featured": {
+    "title": "Featured Properties",
+    "subtitle": "Explore our latest listings",
+    "cta": "View All Properties",
+    "card": {
+      "beds": "Beds",
+      "baths": "Baths",
+      "details": "View Details"
+    }
+  },
+  "services": {
+    "title": "Our Services",
+    "subtitle": "Personalized real estate solutions",
+    "items": [
+      { "title": "Property Sales", "text": "Helping you find the perfect home.", "icon": "🏡" },
+      { "title": "Investment Consulting", "text": "Expert advice on profitable investments.", "icon": "📈" },
+      { "title": "Legal Assistance", "text": "Full support with legal and paperwork.", "icon": "📄" }
+    ]
+  },
+  "about": {
+    "title": "About Us",
+    "subtitle": "Your Trusted Real Estate Partner in Spain",
+    "body": "We provide exceptional service and expert local knowledge to help you find your ideal property on the Costa del Sol. From selecting the right area to negotiating and paperwork, we guide you through every step — clearly and professionally.",
+    "cta": "Learn More"
+  },
+  "contact": {
+    "title": "Get in Touch",
+    "subtitle": "Ready to find your dream home?",
+    "form": {
+      "name": "Your Name",
+      "phone": "Phone",
+      "email": "Email",
+      "message": "Message",
+      "send": "Send Message",
+      "namePlaceholder": "Name",
+      "phonePlaceholder": "+34 ...",
+      "emailPlaceholder": "you@email.com",
+      "messagePlaceholder": "Tell us what you are looking for..."
+    },
+    "info": {
+      "title": "Contact",
+      "whatsapp": "WhatsApp Us",
+      "note": "We typically reply within a few hours during business days."
+    },
+    "footerRights": "All rights reserved"
+  },
+  "seo": {
+    "siteName": "Grahalia Estates",
+    "home": {
+      "title": "Grahalia Estates — Real Estate on Costa del Sol",
+      "description": "Warm, minimal real estate agency landing. Find properties and request details.",
+      "ogTitle": "Grahalia Estates — Real Estate on Costa del Sol",
+      "ogDescription": "Warm, minimal real estate agency landing. Find properties and request details."
+    }
+  }
+}

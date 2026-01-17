@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1768656408753,
+      "tag": "0000_square_stark_industries",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1768660088691,
+      "tag": "0001_sleepy_agent_brand",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1768677392854,
+      "tag": "0002_steep_lady_vermin",
+      "breakpoints": true
+    }
+  ]
+}

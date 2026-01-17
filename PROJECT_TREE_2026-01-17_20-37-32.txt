@@ -1,0 +1,111 @@
+├── app
+│   ├── [lang]
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── admin
+│   │   ├── login
+│   │   │   └── page.tsx
+│   │   ├── properties
+│   │   │   ├── [id]
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── UploadForms.tsx
+│   │   │   ├── new
+│   │   │   │   └── page.tsx
+│   │   │   └── page.tsx
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── api
+│   │   └── admin
+│   │       └── properties
+│   │           └── [id]
+│   │               ├── images
+│   │               │   └── route.ts
+│   │               └── plans
+│   │                   └── route.ts
+│   ├── favicon.ico
+│   ├── globals.css
+│   └── page.tsx
+├── components
+│   ├── About
+│   │   ├── About.module.css
+│   │   └── About.tsx
+│   ├── Contact
+│   │   ├── Contact.module.css
+│   │   └── Contact.tsx
+│   ├── Featured
+│   │   ├── Featured.module.css
+│   │   └── Featured.tsx
+│   ├── Header
+│   │   ├── Header.module.css
+│   │   └── Header.tsx
+│   ├── Hero
+│   │   ├── Hero.module.css
+│   │   └── Hero.tsx
+│   ├── PropertyCard
+│   │   ├── PropertyCard.module.css
+│   │   └── PropertyCard.tsx
+│   └── Services
+│       ├── Services.module.css
+│       └── Services.tsx
+├── db
+│   ├── migrations
+│   │   ├── meta
+│   │   │   ├── 0000_snapshot.json
+│   │   │   ├── 0001_snapshot.json
+│   │   │   ├── 0002_snapshot.json
+│   │   │   └── _journal.json
+│   │   ├── 0000_square_stark_industries.sql
+│   │   ├── 0001_sleepy_agent_brand.sql
+│   │   └── 0002_steep_lady_vermin.sql
+│   ├── index.ts
+│   └── schema.ts
+├── i18n
+│   ├── dictionaries.ts
+│   ├── en.json
+│   └── es.json
+├── public
+│   ├── properties
+│   │   ├── p1.jpg
+│   │   ├── p2.jpg
+│   │   └── p3.jpg
+│   ├── uploads
+│   │   ├── plans
+│   │   │   ├── property-1-1768676667124-01.12.2025_factura_n004_dandelion_alliance.pdf
+│   │   │   ├── property-2-1768676625392-003_2025_factura_chama_propiedades-s.l.pdf
+│   │   │   └── property-3-1768677528463-01.12.2025_factura_n004_dandelion_alliance.pdf
+│   │   └── properties
+│   │       ├── property-1-1768676684738-0-47c05006-94b1-458d-ad07-3ddd7af7d337.jpg
+│   │       ├── property-1-1768676684741-1-4795280565feaeaf65471c.jpg
+│   │       ├── property-1-1768676684751-2---2025-05-26--20.58.03.png
+│   │       ├── property-2-1768671072690-2-chatgpt-image-15-.-2026-.-18_14_52.png
+│   │       ├── property-2-1768672779281-0-image-2.jpg
+│   │       ├── property-2-1768676644879-0-img_5828.jpg
+│   │       ├── property-2-1768676644882-1-image-4.jpg
+│   │       ├── property-2-1768676644884-2-image-3.jpg
+│   │       ├── property-3-1768677545979-0---2025-05-26--20.58.03.png
+│   │       ├── property-3-1768677546000-1---2025-06-10--19.45.23.png
+│   │       ├── property-3-1768677546005-2---2025-05-26--21.14.06.png
+│   │       └── property-3-1768677546009-3---2025-06-10--19.53.39.png
+│   ├── about.jpg
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── hero.jpg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── tools
+│   └── snapshot_repo.py
+├── utils
+│   ├── scroll.ts
+│   └── smoothScroll.ts
+├── .gitignore
+├── docker-compose.yml
+├── drizzle.config.ts
+├── eslint.config.mjs
+├── middleware.ts
+├── next-env.d.ts
+├── next.config.ts
+├── package.json
+├── postcss.config.mjs
+├── README.md
+└── tsconfig.json

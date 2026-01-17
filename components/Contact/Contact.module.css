@@ -1,0 +1,147 @@
+.section {
+  padding: 72px 0 90px;
+  border-top: 1px solid rgba(226, 226, 222, 0.8);
+}
+
+.head {
+  margin-bottom: 18px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 18px;
+  align-items: start;
+  margin-top: 16px;
+}
+
+.form {
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  box-shadow: var(--shadow);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.field:first-child {
+  margin-top: 0;
+}
+
+.label {
+  font-size: 12px;
+  color: rgba(28, 28, 28, 0.75);
+  font-weight: 600;
+}
+
+.input,
+.textarea {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 12px;
+  font-size: 14px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: rgba(14, 94, 86, 0.45);
+  box-shadow: 0 0 0 4px rgba(14, 94, 86, 0.10);
+}
+
+.textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.infoCard {
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  box-shadow: var(--shadow);
+}
+
+.infoTitle {
+  font-family: var(--font-playfair), Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.infoItem {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.infoIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(14, 94, 86, 0.08);
+}
+
+.infoLink {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.infoLink:hover {
+  color: var(--accent);
+}
+
+.divider {
+  height: 1px;
+  background: rgba(226, 226, 222, 0.8);
+  margin: 12px 0;
+}
+
+.waBtn {
+  width: 100%;
+  justify-content: center;
+  margin-top: 6px;
+  text-decoration: none;
+}
+
+.note {
+  margin-top: 12px;
+  font-size: 13px;
+}
+
+.footerLine {
+  height: 1px;
+  background: rgba(226, 226, 222, 0.8);
+  margin-top: 28px;
+}
+
+.footerText {
+  margin-top: 14px;
+  color: rgba(28, 28, 28, 0.6);
+  font-size: 12px;
+}
+
+@media (max-width: 960px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .row {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,89 @@
+.hero {
+  position: relative;
+  overflow: hidden; /* важно */
+  border-bottom: 1px solid rgba(226, 226, 222, 0.8);
+  min-height: 520px;
+
+  /* страховка против горизонтального скролла */
+  width: 100%;
+  max-width: 100%;
+}
+
+.inner {
+  position: relative;
+  z-index: 2;
+  padding: 86px 0 78px;
+}
+
+.content {
+  max-width: 720px;
+}
+
+.sub {
+  margin-top: 14px;
+  font-size: 16px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 26px;
+  flex-wrap: wrap;
+}
+
+.ital {
+  font-style: italic;
+  font-weight: 500;
+}
+
+.bg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+
+  /* важно: убираем transform: scale(1.02), он часто даёт вылезание */
+  background-image:
+    linear-gradient(
+      90deg,
+      rgba(246, 245, 242, 0.95) 0%,
+      rgba(246, 245, 242, 0.72) 40%,
+      rgba(246, 245, 242, 0.22) 72%,
+      rgba(246, 245, 242, 0.06) 100%
+    ),
+    url("/hero.jpg");
+
+  /* вместо scale — чуть “приблизим” через background-size */
+  background-size: 102% auto;
+  background-repeat: no-repeat;
+  background-position: center;
+
+  /* страховка */
+  width: 100%;
+  max-width: 100%;
+}
+
+.fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 120px;
+  z-index: 2; /* чтобы лежало поверх фона */
+  background: linear-gradient(to bottom, rgba(246, 245, 242, 0), var(--bg));
+}
+
+@media (max-width: 720px) {
+  .inner {
+    padding: 64px 0 56px;
+  }
+
+  .hero {
+    min-height: 520px;
+  }
+
+  /* на мобилке фон лучше делать cover, чтобы не было артефактов */
+  .bg {
+    background-size: cover;
+    background-position: 70% center; /* лёгкий сдвиг вправо, чтобы дом был виднее */
+  }
+}
