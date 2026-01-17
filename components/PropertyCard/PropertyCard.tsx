@@ -55,6 +55,9 @@ export default function PropertyCard({
           <span className={styles.specItem}>📐 {property.area} m²</span>
         </div>
 
+        {/* ✅ ВОТ ОН — spacer */}
+        <div className={styles.spacer} />
+
         <a
           className={`btn btnPrimary ${styles.btn}`}
           href="#contact"

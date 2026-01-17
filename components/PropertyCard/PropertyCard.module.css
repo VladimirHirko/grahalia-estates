@@ -6,6 +6,7 @@
   box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
+  height: 100%; /* ✅ важно: карточка тянется по высоте ячейки */
   transition: transform 0.16s ease, box-shadow 0.16s ease;
 }
 
@@ -31,6 +32,20 @@
 
 .body {
   padding: 18px 18px 16px;
+
+  /* ✅ ключевой фикс: тело карточки управляет вертикальной раскладкой */
+  display: flex;
+  flex-direction: column;
+  flex: 1;        /* занимает всё оставшееся место */
+  min-height: 0;
+
+  /* ✅ добавляем "ритм" между блоками */
+  gap: 6px;
+}
+
+.spacer {
+  flex: 1;
+  min-height: 14px; /* ✅ гарантированный "воздух" перед кнопкой */
 }
 
 .title {
@@ -72,10 +87,13 @@
 }
 
 .btn {
-  margin-top: 14px;
+  /* ✅ но мы гарантируем "воздух" над кнопкой */
+  padding-top: 14px;
+
+  align-self: flex-start;
+
   width: fit-content;
   padding: 10px 14px;
   border-radius: 4px;
   text-decoration: none;
 }
-

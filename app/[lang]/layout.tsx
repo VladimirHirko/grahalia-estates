@@ -21,7 +21,7 @@ export function generateStaticParams() {
 
 type LayoutProps = {
   children: React.ReactNode;
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 };
 
 /**
@@ -30,9 +30,10 @@ type LayoutProps = {
  * тексты берём ТОЛЬКО из словарей
  */
 export async function generateMetadata(
-  { params }: { params: { lang: Locale } }
+  { params }: { params: Promise<{ lang: string }> }
 ): Promise<Metadata> {
-  const lang: Locale = isLocale(params.lang) ? params.lang : "en";
+  const { lang: raw } = await params;
+  const lang: Locale = isLocale(raw) ? (raw as Locale) : "en";
   const t = await getDictionary(lang);
 
   return {
@@ -61,8 +62,9 @@ export async function generateMetadata(
   };
 }
 
-export default function RootLayout({ children, params }: LayoutProps) {
-  const lang: Locale = isLocale(params.lang) ? params.lang : "en";
+export default async function RootLayout({ children, params }: LayoutProps) {
+  const { lang: raw } = await params;
+  const lang: Locale = isLocale(raw) ? (raw as Locale) : "en";
 
   return (
     <html lang={lang} className={`${inter.variable} ${playfair.variable}`}>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo, useRef, useState } from "react";
 import { scrollToHash } from "@/utils/smoothScroll";
 import PropertyCard from "../PropertyCard/PropertyCard";
 import styles from "./Featured.module.css";
@@ -8,9 +9,22 @@ type FeaturedDict = {
   title: string;
   subtitle: string;
   cta: string;
+  card: any;
 };
 
-const featured = [
+export type FeaturedItem = {
+  id?: number | string;
+  title: string;
+  location: string;
+  price: string;
+  beds: number;
+  baths: number;
+  area: number;
+  image: string;
+  slug?: string;
+};
+
+const fallbackFeatured: FeaturedItem[] = [
   {
     title: "Modern Villa in Marbella",
     location: "Marbella · Costa del Sol",
@@ -40,13 +54,112 @@ const featured = [
   },
 ];
 
-export default function Featured({ t }: { t: FeaturedDict }) {
+type Props = {
+  t: FeaturedDict;
+  items?: FeaturedItem[];
+
+  itemsPerView?: number;  // default 3
+  intervalMs?: number;    // default 6000
+  randomStart?: boolean;  // default true
+
+  fadeMs?: number;        // default 280
+};
+
+export default function Featured({
+  t,
+  items,
+  itemsPerView = 3,
+  intervalMs = 6000,
+  randomStart = true,
+  fadeMs = 1000,
+}: Props) {
   const OFFSET = 90;
+
+  const pool: FeaturedItem[] = useMemo(() => {
+    return Array.isArray(items) && items.length > 0 ? items : fallbackFeatured;
+  }, [items]);
+
+  const pageCount = Math.max(1, Math.ceil(pool.length / itemsPerView));
+
+  const [page, setPage] = useState(0);
+  const [isFading, setIsFading] = useState(false);
+
+  // чтобы не было гонок таймеров
+  const intervalRef = useRef<number | null>(null);
+  const fadeTimeoutRef = useRef<number | null>(null);
+
+  // защитная очистка таймеров при размонтировании
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) window.clearInterval(intervalRef.current);
+      if (fadeTimeoutRef.current) window.clearTimeout(fadeTimeoutRef.current);
+    };
+  }, []);
+
+  // если пул изменился и page стал невалидным
+  useEffect(() => {
+    if (page >= pageCount) setPage(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageCount]);
+
+  // random start — только после mount
+  useEffect(() => {
+    if (!randomStart) return;
+    if (pageCount <= 1) return;
+
+    setPage((current) => {
+      if (current !== 0) return current;
+      return Math.floor(Math.random() * pageCount);
+    });
+  }, [randomStart, pageCount]);
+
+  // функция "переключиться красиво"
+  const goNext = () => {
+    if (pageCount <= 1) return;
+
+    // 1) fade out
+    setIsFading(true);
+
+    // 2) после fadeMs меняем страницу и fade in
+    if (fadeTimeoutRef.current) window.clearTimeout(fadeTimeoutRef.current);
+
+    fadeTimeoutRef.current = window.setTimeout(() => {
+      setPage((p) => (p + 1) % pageCount);
+      setIsFading(false);
+    }, fadeMs);
+  };
+
+  // автопереключение (каждые intervalMs)
+  useEffect(() => {
+    if (pageCount <= 1) return;
+
+    if (intervalRef.current) window.clearInterval(intervalRef.current);
+
+    intervalRef.current = window.setInterval(() => {
+      goNext();
+    }, intervalMs);
+
+    return () => {
+      if (intervalRef.current) window.clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageCount, intervalMs, fadeMs]);
+
+  const visible = useMemo(() => {
+    const start = page * itemsPerView;
+    const slice = pool.slice(start, start + itemsPerView);
+
+    if (slice.length < itemsPerView && pool.length > slice.length) {
+      return slice.concat(pool.slice(0, itemsPerView - slice.length));
+    }
+
+    return slice;
+  }, [pool, page, itemsPerView]);
 
   return (
     <section id="properties" className={`section ${styles.section}`}>
       <div className="container">
-        {/* Центрированный заголовок как в макете */}
         <div className="section__head">
           <h2 className="sectionTitle">
             <span className="sectionTitleText">{t.title}</span>
@@ -54,13 +167,22 @@ export default function Featured({ t }: { t: FeaturedDict }) {
           <p className="section__kicker">{t.subtitle}</p>
         </div>
 
-        <div className={styles.grid}>
-          {featured.map((p) => (
-            <PropertyCard key={p.title} property={p} t={t.card} />
-          ))}
+        {/* ✅ Fade-обёртка */}
+        <div
+          className={`${styles.fadeWrap} ${isFading ? styles.fadeOut : styles.fadeIn}`}
+          style={{ ["--fade-ms" as any]: `${fadeMs}ms` }}
+        >
+          <div className={styles.grid}>
+            {visible.map((p) => (
+              <PropertyCard
+                key={String(p.id ?? p.title)}
+                property={p}
+                t={t.card}
+              />
+            ))}
+          </div>
         </div>
 
-        {/* CTA */}
         <div className="section__actions">
           <a
             className={`btn btnPrimary ${styles.allBtn}`}

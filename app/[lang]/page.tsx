@@ -6,6 +6,7 @@ import About from "@/components/About/About";
 import Contact from "@/components/Contact/Contact";
 
 import { getDictionary, isLocale, type Locale } from "@/i18n/dictionaries";
+import { getFeaturedItems } from "@/app/lib/publicFeatured";
 
 export default async function Page({
   params,
@@ -16,12 +17,15 @@ export default async function Page({
   const lang: Locale = isLocale(raw) ? (raw as Locale) : "en";
   const t = await getDictionary(lang);
 
+  // ✅ Реальные объекты из БД (только опубликованные)
+  const featuredItems = await getFeaturedItems(lang === "es" ? "es" : "en", 12);
+
   return (
     <>
       <Header lang={lang} t={t.header} />
       <main>
         <Hero t={t.hero} />
-        <Featured t={t.featured} />
+        <Featured t={t.featured} items={featuredItems} />
         <Services t={t.services} />
         <About t={t.about} />
         <Contact t={t.contact} />
