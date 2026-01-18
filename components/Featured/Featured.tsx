@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { scrollToHash } from "@/utils/smoothScroll";
+import Link from "next/link";
 import PropertyCard from "../PropertyCard/PropertyCard";
 import styles from "./Featured.module.css";
 
@@ -55,17 +55,18 @@ const fallbackFeatured: FeaturedItem[] = [
 ];
 
 type Props = {
+  lang: "en" | "es";
   t: FeaturedDict;
   items?: FeaturedItem[];
 
-  itemsPerView?: number;  // default 3
-  intervalMs?: number;    // default 6000
-  randomStart?: boolean;  // default true
-
-  fadeMs?: number;        // default 280
+  itemsPerView?: number;
+  intervalMs?: number;
+  randomStart?: boolean;
+  fadeMs?: number;
 };
 
 export default function Featured({
+  lang,
   t,
   items,
   itemsPerView = 3,
@@ -73,8 +74,6 @@ export default function Featured({
   randomStart = true,
   fadeMs = 1000,
 }: Props) {
-  const OFFSET = 90;
-
   const pool: FeaturedItem[] = useMemo(() => {
     return Array.isArray(items) && items.length > 0 ? items : fallbackFeatured;
   }, [items]);
@@ -84,11 +83,9 @@ export default function Featured({
   const [page, setPage] = useState(0);
   const [isFading, setIsFading] = useState(false);
 
-  // чтобы не было гонок таймеров
   const intervalRef = useRef<number | null>(null);
   const fadeTimeoutRef = useRef<number | null>(null);
 
-  // защитная очистка таймеров при размонтировании
   useEffect(() => {
     return () => {
       if (intervalRef.current) window.clearInterval(intervalRef.current);
@@ -96,13 +93,11 @@ export default function Featured({
     };
   }, []);
 
-  // если пул изменился и page стал невалидным
   useEffect(() => {
     if (page >= pageCount) setPage(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageCount]);
 
-  // random start — только после mount
   useEffect(() => {
     if (!randomStart) return;
     if (pageCount <= 1) return;
@@ -113,14 +108,11 @@ export default function Featured({
     });
   }, [randomStart, pageCount]);
 
-  // функция "переключиться красиво"
   const goNext = () => {
     if (pageCount <= 1) return;
 
-    // 1) fade out
     setIsFading(true);
 
-    // 2) после fadeMs меняем страницу и fade in
     if (fadeTimeoutRef.current) window.clearTimeout(fadeTimeoutRef.current);
 
     fadeTimeoutRef.current = window.setTimeout(() => {
@@ -129,7 +121,6 @@ export default function Featured({
     }, fadeMs);
   };
 
-  // автопереключение (каждые intervalMs)
   useEffect(() => {
     if (pageCount <= 1) return;
 
@@ -167,7 +158,6 @@ export default function Featured({
           <p className="section__kicker">{t.subtitle}</p>
         </div>
 
-        {/* ✅ Fade-обёртка */}
         <div
           className={`${styles.fadeWrap} ${isFading ? styles.fadeOut : styles.fadeIn}`}
           style={{ ["--fade-ms" as any]: `${fadeMs}ms` }}
@@ -176,7 +166,11 @@ export default function Featured({
             {visible.map((p) => (
               <PropertyCard
                 key={String(p.id ?? p.title)}
-                property={p}
+                property={{
+                  ...p,
+                  // ✅ теперь "View Details" ведёт на детальную страницу объекта
+                  href: p.slug ? `/${lang}/properties/${p.slug}` : `/${lang}#contact`,
+                }}
                 t={t.card}
               />
             ))}
@@ -184,16 +178,9 @@ export default function Featured({
         </div>
 
         <div className="section__actions">
-          <a
-            className={`btn btnPrimary ${styles.allBtn}`}
-            href="#contact"
-            onClick={(e) => {
-              e.preventDefault();
-              scrollToHash("#contact", { offset: OFFSET });
-            }}
-          >
+          <Link className={`btn btnPrimary ${styles.allBtn}`} href={`/${lang}/properties`}>
             {t.cta}
-          </a>
+          </Link>
         </div>
       </div>
     </section>

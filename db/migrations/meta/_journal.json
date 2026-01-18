@@ -22,6 +22,13 @@
       "when": 1768677392854,
       "tag": "0002_steep_lady_vermin",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1768735739716,
+      "tag": "0003_hot_doctor_spectrum",
+      "breakpoints": true
     }
   ]
 }

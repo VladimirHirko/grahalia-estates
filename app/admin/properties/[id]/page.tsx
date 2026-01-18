@@ -51,6 +51,28 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
 
   const plansHref = normalizePublicPath(prop.plans_url);
 
+  // ✅ 1) Получаем все фичи (пока показываем EN-лейблы; можно расширить позже)
+  const featuresRes = await db.execute(sql`
+    SELECT
+      f.id,
+      f.key,
+      COALESCE(ft.label, f.key) AS label
+    FROM features f
+    LEFT JOIN feature_translations ft
+      ON ft.feature_id = f.id AND ft.lang = 'en'
+    ORDER BY COALESCE(ft.label, f.key) ASC
+  `);
+  const features = ((featuresRes as any).rows ?? []) as Array<{ id: number; key: string; label: string }>;
+
+  // ✅ 2) Текущие выбранные фичи для объекта
+  const selectedRes = await db.execute(sql`
+    SELECT feature_id
+    FROM property_features
+    WHERE property_id = ${id}
+  `);
+  const selectedRows = ((selectedRes as any).rows ?? []) as Array<{ feature_id: number }>;
+  const selectedSet = new Set<number>(selectedRows.map((r) => Number(r.feature_id)));
+
   async function updateBase(formData: FormData) {
     "use server";
 
@@ -61,7 +83,7 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
       .replace(/[^a-z0-9-]/g, "")
       .replace(/-+/g, "-")
       .replace(/^-|-$/g, "")
-      .slice(0, 255); // даём запас, но лучше держать <= limit колонки
+      .slice(0, 255);
 
     if (!slug) redirect(`/admin/properties/${id}`);
 
@@ -74,6 +96,9 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
         .slice(0, 3) || "EUR";
     const location = String(formData.get("location") || "").trim() || null;
 
+    const descriptionEn = String(formData.get("descriptionEn") || "").trim() || null;
+    const descriptionEs = String(formData.get("descriptionEs") || "").trim() || null;
+
     const bedrooms = toInt(String(formData.get("bedrooms") || ""));
     const bathrooms = toInt(String(formData.get("bathrooms") || ""));
 
@@ -81,6 +106,13 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
     const builtArea = toDecimal(String(formData.get("builtAreaM2") || ""));
     const terraceArea = toDecimal(String(formData.get("terraceAreaM2") || ""));
 
+    // ✅ Amenities (features) из чекбоксов
+    const rawFeatureIds = formData.getAll("features");
+    const featureIds = rawFeatureIds
+      .map((v) => Number(String(v)))
+      .filter((n) => Number.isFinite(n)) as number[];
+
+    // 1) update базовых полей
     await db.execute(sql`
       UPDATE properties
       SET
@@ -89,6 +121,8 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
         price = ${price},
         currency = ${currency},
         location = ${location},
+        description_en = ${descriptionEn},
+        description_es = ${descriptionEs},
         bedrooms = ${bedrooms},
         bathrooms = ${bathrooms},
         plot_area_m2 = ${plotArea},
@@ -97,6 +131,28 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
         updated_at = NOW()
       WHERE id = ${id}
     `);
+
+    // 2) sync amenities (property_features)
+    //    - удаляем старые связи
+    //    - вставляем новые (если есть)
+    await db.execute(sql`
+      DELETE FROM property_features
+      WHERE property_id = ${id}
+    `);
+
+    if (featureIds.length > 0) {
+      const valuesSql = sql.join(
+        featureIds.map((fid) => sql`(${id}, ${fid})`),
+        sql`, `
+      );
+
+      // Если у тебя есть уникальность/PK (property_id, feature_id), это безопасно
+      await db.execute(sql`
+        INSERT INTO property_features (property_id, feature_id)
+        VALUES ${valuesSql}
+        ON CONFLICT DO NOTHING
+      `);
+    }
 
     redirect(`/admin/properties/${id}`);
   }
@@ -115,7 +171,7 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Base fields */}
+      {/* Base fields + Amenities */}
       <section style={card}>
         <form action={updateBase}>
           <div style={grid2}>
@@ -142,6 +198,26 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
           <Field label="Location">
             <input name="location" defaultValue={prop.location ?? ""} style={input} />
           </Field>
+          <Field label="Description (EN)">
+            <textarea
+              name="descriptionEn"
+              defaultValue={prop.description_en ?? ""}
+              rows={6}
+              style={textarea}
+              placeholder="Short description in English..."
+            />
+          </Field>
+
+          <Field label="Description (ES)">
+            <textarea
+              name="descriptionEs"
+              defaultValue={prop.description_es ?? ""}
+              rows={6}
+              style={textarea}
+              placeholder="Descripción en español..."
+            />
+          </Field>
+
 
           <div style={grid3}>
             <Field label="Plot area (m²)">
@@ -153,6 +229,32 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
             <Field label="Terrace area (m²)">
               <input name="terraceAreaM2" defaultValue={prop.terrace_area_m2 ?? ""} style={input} />
             </Field>
+          </div>
+
+          {/* ✅ Amenities */}
+          <div style={{ marginTop: 10, borderTop: "1px solid #E2E2DE", paddingTop: 12 }}>
+            <div style={{ fontWeight: 700, marginBottom: 8 }}>Amenities</div>
+
+            {features.length === 0 ? (
+              <div style={{ opacity: 0.7 }}>No features found. (Seed features first.)</div>
+            ) : (
+              <div style={amenitiesGrid}>
+                {features.map((f) => {
+                  const checked = selectedSet.has(Number(f.id));
+                  return (
+                    <label key={f.id} style={amenityItem}>
+                      <input
+                        type="checkbox"
+                        name="features"
+                        value={String(f.id)}
+                        defaultChecked={checked}
+                      />
+                      <span style={{ marginLeft: 8 }}>{f.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 10 }}>
@@ -181,7 +283,6 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
               </a>
             </span>
 
-            {/* delete pdf (через POST + _method) */}
             <form action={`/api/admin/properties/${id}/plans`} method="post">
               <input type="hidden" name="_method" value="delete" />
               <button type="submit" style={btnDanger}>
@@ -301,6 +402,22 @@ const input: React.CSSProperties = { width: "100%", padding: 12, borderRadius: 1
 const grid2: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 };
 const grid3: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 };
 
+const amenitiesGrid: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+  gap: 10,
+};
+
+const amenityItem: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "10px 12px",
+  borderRadius: 12,
+  border: "1px solid #E2E2DE",
+  background: "#fafafa",
+};
+
 const btnGhost: React.CSSProperties = {
   padding: "10px 14px",
   borderRadius: 12,
@@ -346,4 +463,13 @@ const btnMiniDanger: React.CSSProperties = {
   cursor: "pointer",
   fontWeight: 600,
   color: "#a11d1d",
+};
+
+const textarea: React.CSSProperties = {
+  width: "100%",
+  padding: 12,
+  borderRadius: 12,
+  border: "1px solid #E2E2DE",
+  resize: "vertical",
+  minHeight: 120,
 };

@@ -1,0 +1,193 @@
+/* components/PropertyGallery/PropertyGallery.module.css */
+
+.gallery {
+  --cover-h: 520px;
+
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 14px;
+  align-items: start;
+}
+
+/* Cover */
+.coverBtn {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 18px;
+  overflow: hidden;
+  display: block;
+  width: 100%;
+}
+
+.cover {
+  width: 100%;
+  height: var(--cover-h);
+  object-fit: cover;
+  display: block;
+}
+
+/* Thumbs (desktop) */
+.thumbs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+
+  /* ✅ ключевое: ограничиваем высоту правой колонки и включаем скролл */
+  height: var(--cover-h);
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  align-content: start;
+  align-items: start;
+
+  /* чтобы скролл не "съедал" ширину и сетка не прыгала */
+  scrollbar-gutter: stable;
+  padding-right: 6px;
+}
+
+.thumbBtn {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 16px;
+  overflow: hidden;
+  display: block;
+  width: 100%;
+}
+
+.thumb {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+
+/* -----------------------------
+   Mobile layout: cover top, thumbs below (2 rows, horizontal scroll)
+------------------------------ */
+@media (max-width: 720px) {
+  .gallery {
+    --cover-h: 320px;
+
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* 2 rows, horizontal scroll */
+  .thumbs {
+    height: auto;                 /* ✅ убираем десктоп-ограничение */
+    overflow-y: hidden;
+    overflow-x: auto;
+
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(2, 1fr);
+    grid-auto-columns: 140px;
+    gap: 10px;
+
+    padding: 0 0 6px 0;
+    margin: 0;
+
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+
+    justify-content: start;
+    justify-items: start;
+    align-content: start;
+  }
+
+  .thumbBtn {
+    scroll-snap-align: start;
+    width: 140px;
+    display: block;
+  }
+
+  .thumb {
+    height: 95px;
+  }
+}
+
+/* -----------------------------
+   Modal
+------------------------------ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 10, 0.75);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.modal {
+  width: min(1100px, 100%);
+  height: min(720px, 100%);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 12px;
+}
+
+.modalTop {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.closeBtn {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.stage {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.stageImg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.navBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 46px;
+}
+
+.prev {
+  left: 12px;
+}
+.next {
+  right: 12px;
+}
+
+.modalBottom {
+  display: flex;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+}

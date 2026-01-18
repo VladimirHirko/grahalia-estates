@@ -1,7 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { scrollToHash } from "@/utils/smoothScroll";
 import styles from "./PropertyCard.module.css";
+
+type Feature = {
+  key: string;   // parking, pool...
+  label: string; // translated label
+};
 
 type Property = {
   title: string;
@@ -11,12 +17,32 @@ type Property = {
   baths: number;
   area: number;
   image: string;
+
+  // ✅ Новое (не обязательное)
+  href?: string;              // если есть — кнопка ведёт по ссылке, а не скроллит
+  features?: Feature[];       // amenities для бейджей
+  showFeatures?: boolean;     // можно отключить (например на главной)
 };
 
 type CardT = {
   beds: string;
   baths: string;
   details: string;
+};
+
+const ICON: Record<string, string> = {
+  parking: "🅿️",
+  garage: "🚗",
+  pool: "🏊",
+  gym: "🏋️",
+  lift: "🛗",
+  terrace: "🌤️",
+  garden: "🌿",
+  sea_view: "🌊",
+  storage: "📦",
+  aircon: "❄️",
+  heating: "🔥",
+  gated: "🔒",
 };
 
 export default function PropertyCard({
@@ -26,6 +52,9 @@ export default function PropertyCard({
   property: Property;
   t: CardT;
 }) {
+  const feats = Array.isArray(property.features) ? property.features : [];
+  const showFeatures = property.showFeatures !== false; // по умолчанию показываем
+
   return (
     <article className={styles.card}>
       <div className={styles.imageWrap}>
@@ -55,19 +84,41 @@ export default function PropertyCard({
           <span className={styles.specItem}>📐 {property.area} m²</span>
         </div>
 
-        {/* ✅ ВОТ ОН — spacer */}
+        {/* ✅ Amenities / Features (бейджи) */}
+        {showFeatures && feats.length > 0 && (
+          <div className={styles.badges} aria-label="Amenities">
+            {feats.slice(0, 5).map((f) => (
+              <span key={f.key} className={styles.badge} title={f.label}>
+                <span className={styles.badgeIcon}>{ICON[f.key] ?? "•"}</span>
+                <span className={styles.badgeText}>{f.label}</span>
+              </span>
+            ))}
+            {feats.length > 5 && (
+              <span className={styles.more}>+{feats.length - 5}</span>
+            )}
+          </div>
+        )}
+
+        {/* ✅ spacer */}
         <div className={styles.spacer} />
 
-        <a
-          className={`btn btnPrimary ${styles.btn}`}
-          href="#contact"
-          onClick={(e) => {
-            e.preventDefault();
-            scrollToHash("#contact", { offset: 90 });
-          }}
-        >
-          {t.details}
-        </a>
+        {/* ✅ ВАЖНО: если href есть — обычная навигация, иначе якорь */}
+        {property.href ? (
+          <Link className={`btn btnPrimary ${styles.btn}`} href={property.href}>
+            {t.details}
+          </Link>
+        ) : (
+          <a
+            className={`btn btnPrimary ${styles.btn}`}
+            href="#contact"
+            onClick={(e) => {
+              e.preventDefault();
+              scrollToHash("#contact", { offset: 90 });
+            }}
+          >
+            {t.details}
+          </a>
+        )}
       </div>
     </article>
   );

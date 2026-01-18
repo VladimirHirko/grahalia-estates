@@ -9,6 +9,7 @@
   --header-h: 15px;
   --radius: 6px;
   --shadow: 0 10px 26px rgba(0, 0, 0, 0.06);
+  --container-pad: 14px;
 }
 
 /* --- Reset / base --- */

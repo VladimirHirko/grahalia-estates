@@ -25,7 +25,7 @@ export default async function Page({
       <Header lang={lang} t={t.header} />
       <main>
         <Hero t={t.hero} />
-        <Featured t={t.featured} items={featuredItems} />
+        <Featured lang={lang === "es" ? "es" : "en"} t={t.featured} items={featuredItems} />
         <Services t={t.services} />
         <About t={t.about} />
         <Contact t={t.contact} />

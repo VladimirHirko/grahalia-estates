@@ -21,7 +21,20 @@ function toDecimal(v: FormDataEntryValue | null) {
   return Number.isFinite(n) ? n : null;
 }
 
-export default function AdminPropertyNewPage() {
+export default async function AdminPropertyNewPage() {
+  // ✅ features для чекбоксов (EN labels, админка без i18n)
+  const featuresRes = await db.execute(sql`
+    SELECT
+      f.id,
+      f.key,
+      COALESCE(ft.label, f.key) AS label
+    FROM features f
+    LEFT JOIN feature_translations ft
+      ON ft.feature_id = f.id AND ft.lang = 'en'
+    ORDER BY COALESCE(ft.label, f.key) ASC
+  `);
+  const features = ((featuresRes as any).rows ?? []) as Array<{ id: number; key: string; label: string }>;
+
   async function create(formData: FormData) {
     "use server";
 
@@ -44,16 +57,27 @@ export default function AdminPropertyNewPage() {
     const bedrooms = toInt(formData.get("bedrooms"));
     const bathrooms = toInt(formData.get("bathrooms"));
 
-    // новые площади
+    // площади (оставляем как было)
     const plotAreaM2 = toInt(formData.get("plotAreaM2"));
     const builtAreaM2 = toInt(formData.get("builtAreaM2"));
     const terraceAreaM2 = toInt(formData.get("terraceAreaM2"));
 
+    // описание объекта
+    const descriptionEn = String(formData.get("descriptionEn") || "").trim() || null;
+    const descriptionEs = String(formData.get("descriptionEs") || "").trim() || null;
+
     // планы (пока просто ссылка/путь)
     const plansUrl = String(formData.get("plansUrl") || "").trim() || null;
 
+    // ✅ Amenities (features) из чекбоксов
+    const rawFeatureIds = formData.getAll("features");
+    const featureIds = rawFeatureIds
+      .map((v) => Number(String(v)))
+      .filter((n) => Number.isFinite(n)) as number[];
+
     try {
-      await db.execute(sql`
+      // 1) создаём property и получаем id
+      const inserted = await db.execute(sql`
         INSERT INTO properties
           (
             slug,
@@ -63,6 +87,8 @@ export default function AdminPropertyNewPage() {
             bedrooms,
             bathrooms,
             location,
+            description_en,
+            description_es,
             plot_area_m2,
             built_area_m2,
             terrace_area_m2,
@@ -77,12 +103,32 @@ export default function AdminPropertyNewPage() {
             ${bedrooms},
             ${bathrooms},
             ${location},
+            ${descriptionEn},
+            ${descriptionEs},
             ${plotAreaM2},
             ${builtAreaM2},
             ${terraceAreaM2},
             ${plansUrl}
           )
+        RETURNING id
       `);
+
+      const newId = Number((inserted as any).rows?.[0]?.id);
+      if (!Number.isFinite(newId)) redirect("/admin/properties/new");
+
+      // 2) записываем amenities в property_features
+      if (featureIds.length > 0) {
+        const valuesSql = sql.join(
+          featureIds.map((fid) => sql`(${newId}, ${fid})`),
+          sql`, `
+        );
+
+        await db.execute(sql`
+          INSERT INTO property_features (property_id, feature_id)
+          VALUES ${valuesSql}
+          ON CONFLICT DO NOTHING
+        `);
+      }
     } catch {
       redirect("/admin/properties/new");
     }
@@ -141,6 +187,24 @@ export default function AdminPropertyNewPage() {
             <input name="location" placeholder="Marbella" style={inputStyle} />
           </Field>
 
+          <Field label="Description (EN)" hint="Короткое описание на английском">
+            <textarea
+              name="descriptionEn"
+              rows={6}
+              placeholder="Short description in English..."
+              style={textarea}
+            />
+          </Field>
+
+          <Field label="Description (ES)" hint="Descripción en español">
+            <textarea
+              name="descriptionEs"
+              rows={6}
+              placeholder="Descripción en español..."
+              style={textarea}
+            />
+          </Field>
+
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
             <Field label="Bedrooms">
               <input name="bedrooms" inputMode="numeric" placeholder="3" style={inputStyle} />
@@ -166,6 +230,22 @@ export default function AdminPropertyNewPage() {
               <input name="terraceAreaM2" inputMode="numeric" placeholder="30" style={inputStyle} />
             </Field>
           </div>
+
+          {/* ✅ Amenities */}
+          <h2 style={{ fontSize: 18, marginTop: 18, marginBottom: 10 }}>Amenities</h2>
+
+          {features.length === 0 ? (
+            <p style={{ marginTop: 6, opacity: 0.7 }}>No features found. (Seed features first.)</p>
+          ) : (
+            <div style={amenitiesGrid}>
+              {features.map((f) => (
+                <label key={f.id} style={amenityItem}>
+                  <input type="checkbox" name="features" value={String(f.id)} />
+                  <span style={{ marginLeft: 8 }}>{f.label}</span>
+                </label>
+              ))}
+            </div>
+          )}
 
           <h2 style={{ fontSize: 18, marginTop: 18, marginBottom: 10 }}>Plans</h2>
 
@@ -244,4 +324,29 @@ const inputStyle: React.CSSProperties = {
   padding: 12,
   borderRadius: 12,
   border: "1px solid #E2E2DE",
+};
+
+const textarea: React.CSSProperties = {
+  width: "100%",
+  padding: 12,
+  borderRadius: 12,
+  border: "1px solid #E2E2DE",
+  resize: "vertical",
+  minHeight: 120,
+};
+
+const amenitiesGrid: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+  gap: 10,
+};
+
+const amenityItem: React.CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "10px 12px",
+  borderRadius: 12,
+  border: "1px solid #E2E2DE",
+  background: "#fafafa",
 };

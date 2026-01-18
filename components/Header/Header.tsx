@@ -33,6 +33,12 @@ export default function Header({ lang, t }: HeaderProps) {
 
   const HEADER_OFFSET = 90;
 
+  const isHome = pathname === `/${lang}` || pathname === `/${lang}/`;
+
+  // ✅ любые страницы properties: каталог + детальная
+  const isProperties = pathname?.startsWith(`/${lang}/properties`);
+  const isCatalog = pathname === `/${lang}/properties`;
+
   const [activeId, setActiveId] = useState<string>("home");
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -48,7 +54,21 @@ export default function Header({ lang, t }: HeaderProps) {
   const goTo = (id: string) => {
     setActiveId(id);
     closeMenu();
-    scrollToHash(`#${id}`, { offset: HEADER_OFFSET });
+
+    // На главной — всегда плавный перелёт по якорю
+    if (isHome) {
+      scrollToHash(`#${id}`, { offset: HEADER_OFFSET });
+      return;
+    }
+
+    // ✅ если кликнули "Properties" НЕ на главной — ведём в каталог
+    if (id === "properties") {
+      router.push(`/${lang}/properties`);
+      return;
+    }
+
+    // На других страницах — уводим на главную с hash
+    router.push(`/${lang}#${id}`);
   };
 
   // --- helpers for locale switch ---
@@ -73,8 +93,40 @@ export default function Header({ lang, t }: HeaderProps) {
     router.push(buildLocalePath(nextLang));
   }
 
+  useEffect(() => {
+    if (!isHome) return;
+
+    const hash = typeof window !== "undefined" ? window.location.hash : "";
+    if (!hash) return;
+
+    const id = hash.replace("#", "");
+    if (!id) return;
+
+    // даём DOM прогрузить секции, потом скроллим мягко
+    const tmr = window.setTimeout(() => {
+      scrollToHash(`#${id}`, { offset: HEADER_OFFSET });
+    }, 50);
+
+    return () => window.clearTimeout(tmr);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, lang]);
+
+  useEffect(() => {
+    // ✅ на каталоге и на детальной странице подсвечиваем Properties
+    if (isProperties) {
+      setActiveId("properties");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
   // 1) Active section picker
   useEffect(() => {
+    // Если мы на каталоге — секций нет, подсвечиваем Properties вручную
+    if (isCatalog) {
+      setActiveId("properties");
+      return;
+    }
+
     const sections = nav
       .map((n) => document.getElementById(n.id))
       .filter(Boolean) as HTMLElement[];
@@ -130,8 +182,8 @@ export default function Header({ lang, t }: HeaderProps) {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nav]);
+  }, [nav, isCatalog, activeId, HEADER_OFFSET]);
+
 
   // 2) Desktop indicator
   const recalcIndicator = () => {

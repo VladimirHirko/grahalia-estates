@@ -53,6 +53,35 @@ export const properties = pgTable(
     // Планы объекта (PDF или похожее) — храним путь/URL
     plansUrl: text("plans_url"),
 
+    // Краткое описание объекта
+    description_en: text("description_en"),
+    description_es: text("description_es"),
+
+    // --- NEW: тип/статус/локация ---
+    propertyType: varchar("property_type", { length: 24 }), // villa/apartment/...
+    condition: varchar("condition", { length: 24 }),        // new_build/resale/...
+    status: varchar("status", { length: 16 }).notNull().default("available"),
+
+    // локация структурно
+    city: varchar("city", { length: 80 }),
+    area: varchar("area", { length: 80 }),
+    subarea: varchar("subarea", { length: 80 }),
+
+    lat: numeric("lat", { precision: 9, scale: 6 }),
+    lng: numeric("lng", { precision: 9, scale: 6 }),
+
+    /** --- NEW: квартиры --- **/
+    floor: integer("floor"),
+    totalFloors: integer("total_floors"),
+    communityFeesMonth: numeric("community_fees_month", { precision: 10, scale: 2 }),
+    ibiYear: numeric("ibi_year", { precision: 10, scale: 2 }),
+    garbageTaxYear: numeric("garbage_tax_year", { precision: 10, scale: 2 }),
+
+    /** --- NEW: дома/общие --- **/
+    orientation: varchar("orientation", { length: 2 }), // N/NE/...
+    energyRating: varchar("energy_rating", { length: 1 }), // A-G
+    yearBuilt: integer("year_built"),
+
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
