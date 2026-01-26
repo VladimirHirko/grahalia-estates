@@ -1,0 +1,233 @@
+├── app
+│   ├── [lang]
+│   │   ├── cookies
+│   │   │   └── page.tsx
+│   │   ├── privacy
+│   │   │   └── page.tsx
+│   │   ├── properties
+│   │   │   ├── [slug]
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── property.module.css
+│   │   │   ├── Filters.tsx
+│   │   │   ├── page.tsx
+│   │   │   └── properties.module.css
+│   │   ├── terms
+│   │   │   └── page.tsx
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── admin
+│   │   ├── leads
+│   │   │   ├── [id]
+│   │   │   │   └── page.tsx
+│   │   │   └── page.tsx
+│   │   ├── login
+│   │   │   └── page.tsx
+│   │   ├── properties
+│   │   │   ├── [id]
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── UploadForms.tsx
+│   │   │   ├── new
+│   │   │   │   └── page.tsx
+│   │   │   └── page.tsx
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── api
+│   │   ├── admin
+│   │   │   ├── leads
+│   │   │   │   └── export
+│   │   │   │       └── route.ts
+│   │   │   └── properties
+│   │   │       └── [id]
+│   │   │           ├── images
+│   │   │           │   └── route.ts
+│   │   │           └── plans
+│   │   │               └── route.ts
+│   │   └── leads
+│   │       └── route.ts
+│   ├── lib
+│   │   ├── cookies
+│   │   │   └── consent.ts
+│   │   ├── email
+│   │   │   └── sendLeadNotification.ts
+│   │   ├── publicFeatured.ts
+│   │   └── publicProperties.ts
+│   ├── public
+│   │   ├── brand
+│   │   │   ├── logo.jpg
+│   │   │   └── PHOTO-2026-01-11-19-28-15.jpg
+│   │   ├── hero
+│   │   │   └── house.jpg
+│   │   ├── file.svg
+│   │   ├── globe.svg
+│   │   ├── next.svg
+│   │   ├── vercel.svg
+│   │   └── window.svg
+│   ├── site.webmanifest
+│   │   └── route.ts
+│   ├── src
+│   │   ├── app
+│   │   │   ├── favicon.ico
+│   │   │   ├── globals.css
+│   │   │   ├── layout.tsx
+│   │   │   ├── page.module.css
+│   │   │   └── page.tsx
+│   │   ├── components
+│   │   │   ├── Header
+│   │   │   │   ├── header.module.css
+│   │   │   │   └── Header.tsx
+│   │   │   ├── Hero
+│   │   │   │   ├── hero.module.css
+│   │   │   │   └── Hero.tsx
+│   │   │   └── ui
+│   │   │       ├── button.module.css
+│   │   │       └── Button.tsx
+│   │   ├── lib
+│   │   │   ├── nav.ts
+│   │   │   └── useActiveSection.ts
+│   │   └── styles
+│   │       ├── globals.css
+│   │       └── tokens.css
+│   ├── .gitignore
+│   ├── apple-touch-icon.png
+│   ├── eslint.config.mjs
+│   ├── favicon-96x96.png
+│   ├── favicon.ico
+│   ├── favicon.svg
+│   ├── globals.css
+│   ├── next.config.ts
+│   ├── package.json
+│   ├── page.tsx
+│   ├── README.md
+│   ├── tsconfig.json
+│   ├── web-app-manifest-192x192.png
+│   └── web-app-manifest-512x512.png
+├── components
+│   ├── About
+│   │   ├── About.module.css
+│   │   └── About.tsx
+│   ├── AppShell
+│   │   └── AppShell.tsx
+│   ├── Contact
+│   │   ├── Contact.module.css
+│   │   └── Contact.tsx
+│   ├── CookieConsent
+│   │   ├── CookieConsent.module.css
+│   │   └── CookieConsent.tsx
+│   ├── Featured
+│   │   ├── Featured.module.css
+│   │   └── Featured.tsx
+│   ├── Footer
+│   │   ├── Footer.module.css
+│   │   └── Footer.tsx
+│   ├── GalleryModal
+│   │   ├── GalleryModal.module.css
+│   │   └── GalleryModal.tsx
+│   ├── Header
+│   │   ├── Header.module.css
+│   │   └── Header.tsx
+│   ├── Hero
+│   │   ├── Hero.module.css
+│   │   └── Hero.tsx
+│   ├── LeadContactForm
+│   │   └── LeadContactForm.tsx
+│   ├── LeadForm
+│   │   ├── LeadForm.module.css
+│   │   └── LeadForm.tsx
+│   ├── PropertyCard
+│   │   ├── PropertyCard.module.css
+│   │   └── PropertyCard.tsx
+│   ├── PropertyGallery
+│   │   ├── PropertyGallery.module.css
+│   │   └── PropertyGallery.tsx
+│   └── Services
+│       ├── Services.module.css
+│       └── Services.tsx
+├── db
+│   ├── migrations
+│   │   ├── meta
+│   │   │   ├── 0000_snapshot.json
+│   │   │   ├── 0001_snapshot.json
+│   │   │   ├── 0002_snapshot.json
+│   │   │   ├── 0003_snapshot.json
+│   │   │   ├── 0005_snapshot.json
+│   │   │   ├── 0006_snapshot.json
+│   │   │   ├── 0007_snapshot.json
+│   │   │   └── _journal.json
+│   │   ├── 0000_square_stark_industries.sql
+│   │   ├── 0001_sleepy_agent_brand.sql
+│   │   ├── 0002_steep_lady_vermin.sql
+│   │   ├── 0003_hot_doctor_spectrum.sql
+│   │   ├── 0004_seed_features.sql
+│   │   ├── 0005_add_leads.sql
+│   │   ├── 0005_rapid_union_jack.sql
+│   │   ├── 0006_large_kinsey_walden.sql
+│   │   ├── 0007_happy_carnage.sql
+│   │   └── 0008_add_public_id.sql
+│   ├── index.ts
+│   └── schema.ts
+├── i18n
+│   ├── dictionaries.ts
+│   ├── en.json
+│   └── es.json
+├── public
+│   ├── properties
+│   │   ├── p1.jpg
+│   │   ├── p2.jpg
+│   │   └── p3.jpg
+│   ├── uploads
+│   │   ├── plans
+│   │   │   └── property-1-1768757642891-01.12.2025_factura_n004_dandelion_alliance.pdf
+│   │   └── properties
+│   │       ├── property-1-1768757656616-0-bf15d005-c34f-4fe2-b0ba-3f421d8f2f37.jpg
+│   │       ├── property-1-1768757656620-1-buy-real-estate-in-spain.jpg
+│   │       ├── property-1-1768757656622-2-house-with-a-classic-functional-design-close-to-barcelona-top-house-realty-5.jpeg
+│   │       ├── property-1-1768757656625-3-o_1d1odqjmb188g4j411e7198v1dmu1a_w_102400x80000.jpg
+│   │       ├── property-2-1768764779633-0-110ad1a6-8c87-4be3-ac5b-553714dfdf89.jpg
+│   │       ├── property-2-1768764789427-0-bf15d005-c34f-4fe2-b0ba-3f421d8f2f37.jpg
+│   │       ├── property-2-1768764789430-1-buy-real-estate-in-spain.jpg
+│   │       ├── property-2-1768764789433-2-house-with-a-classic-functional-design-close-to-barcelona-top-house-realty-5.jpeg
+│   │       ├── property-2-1768764789438-3-o_1d1odqjmb188g4j411e7198v1dmu1a_w_102400x80000.jpg
+│   │       ├── property-2-1768853652618-0---2026-01-19--18.58.46.png
+│   │       ├── property-2-1768853652647-1---2026-01-19--19.00.18.png
+│   │       ├── property-2-1768853652661-2---2026-01-19--19.01.33.png
+│   │       ├── property-2-1768853652670-3---2026-01-19--19.02.13.png
+│   │       ├── property-2-1768853743987-0-bf15d005-c34f-4fe2-b0ba-3f421d8f2f37.jpg
+│   │       ├── property-2-1768853743991-1-buy-real-estate-in-spain.jpg
+│   │       ├── property-2-1768853743995-2-house-with-a-classic-functional-design-close-to-barcelona-top-house-realty-5.jpeg
+│   │       ├── property-2-1768853743998-3-o_1d1odqjmb188g4j411e7198v1dmu1a_w_102400x80000.jpg
+│   │       ├── property-3-1768764897051-0-chatgpt-image-15-.-2026-.-18_14_44.png
+│   │       ├── property-3-1768764897058-1-chatgpt-image-15-.-2026-.-18_14_49.png
+│   │       ├── property-3-1768764897064-2-chatgpt-image-15-.-2026-.-18_14_52.png
+│   │       ├── property-5-1769034351563-0-_la_noche_estrellada__de_van_gogh.jpg
+│   │       ├── property-5-1769034368543-0-arenda-villy-v-ispanii.jpg
+│   │       ├── property-7-1769040327002-0-image.jpg
+│   │       ├── property-8-1769040751062-0-sebastien-lavalaye-rua4yqfqoc4-unsplash.jpg
+│   │       └── property-9-1769189496936-0-eden-beach-torremolinos.jpg
+│   ├── about.jpg
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── hero.jpg
+│   ├── logo.png
+│   ├── logo_cuadrado.png
+│   ├── next.svg
+│   ├── site.webmanifest
+│   ├── vercel.svg
+│   ├── web-app-manifest-192x192.png
+│   ├── web-app-manifest-512x512.png
+│   └── window.svg
+├── tools
+│   └── snapshot_repo.py
+├── utils
+│   ├── scroll.ts
+│   └── smoothScroll.ts
+├── .gitignore
+├── docker-compose.yml
+├── drizzle.config.ts
+├── eslint.config.mjs
+├── middleware.ts
+├── next-env.d.ts
+├── next.config.ts
+├── package.json
+├── postcss.config.mjs
+├── README.md
+└── tsconfig.json

@@ -11,7 +11,7 @@
     "whatsapp": "WhatsApp"
   },
   "hero": {
-    "titleA": "Encuentra tu casa soñada",
+    "titleA": "Encuentra la casa de tus sueños",
     "titleB": "en España",
     "subtitle": "Propiedades de lujo en venta e inversión",
     "ctaPrimary": "Ver propiedades",
@@ -19,32 +19,49 @@
   },
   "featured": {
     "title": "Propiedades destacadas",
-    "subtitle": "Descubre nuestras últimas novedades",
+    "subtitle": "Descubre nuestras últimas ofertas",
     "cta": "Ver todas las propiedades",
     "card": {
-      "beds": "Habitaciones",
+      "beds": "Dormitorios",
       "baths": "Baños",
-      "details": "Ver detalles"
+      "details": "Ver detalles",
+      "forSale": "Venta",
+      "forRent": "Alquiler",
+      "newBuild": "Obra nueva",
+      "reserved": "Reservado",
+      "sold": "Vendido"
     }
   },
   "services": {
     "title": "Nuestros servicios",
     "subtitle": "Soluciones inmobiliarias personalizadas",
     "items": [
-      { "title": "Venta de propiedades", "text": "Te ayudamos a encontrar la casa perfecta.", "icon": "🏡" },
-      { "title": "Consultoría de inversión", "text": "Asesoramiento experto en inversiones rentables.", "icon": "📈" },
-      { "title": "Asesoramiento legal", "text": "Gestión completa de trámites y documentación.", "icon": "📄" }
+      {
+        "title": "Venta de propiedades",
+        "text": "Te ayudamos a encontrar la vivienda perfecta.",
+        "icon": "🏡"
+      },
+      {
+        "title": "Asesoramiento en inversión",
+        "text": "Consejos expertos para inversiones rentables.",
+        "icon": "📈"
+      },
+      {
+        "title": "Asistencia legal",
+        "text": "Apoyo completo con trámites y documentación.",
+        "icon": "📄"
+      }
     ]
   },
   "about": {
     "title": "Sobre nosotros",
-    "subtitle": "Tu agencia inmobiliaria de confianza en la Costa del Sol",
-    "body": "Ofrecemos un servicio excepcional y un profundo conocimiento local para ayudarte a encontrar la propiedad ideal en la Costa del Sol. Desde la elección de la zona perfecta hasta la negociación y todos los trámites legales, te acompañamos en cada paso con claridad y profesionalidad.",
+    "subtitle": "Tu socio inmobiliario de confianza en España",
+    "body": "Ofrecemos un servicio excepcional y un profundo conocimiento local para ayudarte a encontrar la propiedad ideal en la Costa del Sol. Desde la elección de la zona adecuada hasta la negociación y los trámites legales, te acompañamos en cada paso con claridad y profesionalidad.",
     "cta": "Saber más"
   },
   "contact": {
     "title": "Ponte en contacto",
-    "subtitle": "¿Listo para encontrar tu casa soñada?",
+    "subtitle": "¿Listo para encontrar la casa de tus sueños?",
     "form": {
       "name": "Tu nombre",
       "phone": "Teléfono",
@@ -54,14 +71,64 @@
       "namePlaceholder": "Nombre",
       "phonePlaceholder": "+34 ...",
       "emailPlaceholder": "tu@email.com",
-      "messagePlaceholder": "Cuéntanos qué estás buscando..."
+      "messagePlaceholder": "Cuéntanos qué estás buscando...",
+      "messageHint": "Consejo: introduce al menos 15 caracteres (más detalles = respuesta más rápida).",
+      "messageMinError": "Introduce al menos 15 caracteres en el mensaje."
     },
     "info": {
       "title": "Contacto",
       "whatsapp": "Escríbenos por WhatsApp",
-      "note": "Normalmente respondemos en pocas horas en días laborables."
+      "note": "Normalmente respondemos en pocas horas durante días laborables."
+    }
+  },
+
+  "footer": {
+    "tagline": "Tu hogar, con claridad",
+    "locationLine": "Costa del Sol • España",
+    "navTitle": "Enlaces",
+    "nav": {
+      "home": "Inicio",
+      "properties": "Propiedades",
+      "services": "Servicios",
+      "about": "Sobre nosotros",
+      "contact": "Contacto"
     },
-    "footerRights": "Todos los derechos reservados"
+    "socialTitle": "Redes sociales",
+    "socials": {
+      "instagram": "Instagram (próximamente)",
+      "facebook": "Facebook (próximamente)",
+      "linkedin": "LinkedIn (próximamente)"
+    },
+    "legal": {
+      "privacy": "Privacidad",
+      "cookies": "Cookies",
+      "terms": "Términos",
+      "manageCookies": "Gestionar cookies"
+    },
+    "rights": "Todos los derechos reservados"
+  },
+  "cookies": {
+    "consent": {
+      "bannerText": "Utilizamos cookies para mejorar tu experiencia. Puedes aceptar todas las cookies, rechazar las no esenciales o gestionar tus preferencias.",
+      "acceptAll": "Aceptar todas",
+      "rejectAll": "Rechazar no esenciales",
+      "manage": "Gestionar cookies",
+
+      "modalTitle": "Preferencias de cookies",
+      "modalText": "Elige qué cookies permites. Las cookies necesarias siempre están activadas.",
+
+      "necessaryTitle": "Necesarias",
+      "necessaryDesc": "Son imprescindibles para que el sitio funcione correctamente.",
+
+      "analyticsTitle": "Analítica",
+      "analyticsDesc": "Nos ayuda a entender cómo se utiliza el sitio.",
+
+      "marketingTitle": "Marketing",
+      "marketingDesc": "Nos ayuda a mostrar anuncios relevantes y medir campañas.",
+
+      "save": "Guardar",
+      "close": "Cerrar"
+    }
   },
   "seo": {
     "siteName": "Grahalia Estates",

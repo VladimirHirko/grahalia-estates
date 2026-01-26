@@ -1,5 +1,6 @@
 import {
   pgTable,
+  pgEnum, // ✅ ДОБАВИТЬ
   serial,
   integer,
   varchar,
@@ -9,11 +10,20 @@ import {
   timestamp,
   primaryKey,
   uniqueIndex,
+  index, // ✅ добавить
 } from "drizzle-orm/pg-core";
 
 // 1) Ограничиваем языки: только те, что есть в проекте
 export const localeEnumValues = ["en", "es"] as const;
 export type Locale = (typeof localeEnumValues)[number];
+
+// --------------------
+// RENT (типы аренды)
+// --------------------
+export const rentTypeEnum = pgEnum("rent_type", ["long_term", "short_term", "holiday"]);
+
+export const rentPeriodEnum = pgEnum("rent_period", ["month", "week", "day"]);
+
 
 // --------------------
 // PROPERTIES (основа)
@@ -25,6 +35,7 @@ export const properties = pgTable(
 
     // slug для URL: /[lang]/properties/[slug]
     slug: varchar("slug", { length: 255 }).notNull(),
+    publicId: varchar("public_id", { length: 16 }).notNull(),
 
     // статус публикации
     isPublished: boolean("is_published").notNull().default(false),
@@ -58,9 +69,16 @@ export const properties = pgTable(
     description_es: text("description_es"),
 
     // --- NEW: тип/статус/локация ---
+    dealType: varchar("deal_type", { length: 8 }).notNull().default("sale"), // sale|rent    
     propertyType: varchar("property_type", { length: 24 }), // villa/apartment/...
     condition: varchar("condition", { length: 24 }),        // new_build/resale/...
     status: varchar("status", { length: 16 }).notNull().default("available"),
+
+    // --- NEW: аренда (только если deal_type = rent) ---
+    // nullable специально: старые записи не ломаем, валидация будет на уровне админки
+    rentType: rentTypeEnum("rent_type"),
+    rentPrice: numeric("rent_price", { precision: 12, scale: 2 }),
+    rentPeriod: rentPeriodEnum("rent_period"),
 
     // локация структурно
     city: varchar("city", { length: 80 }),
@@ -87,6 +105,7 @@ export const properties = pgTable(
   },
   (t) => ({
     slugUnique: uniqueIndex("properties_slug_unique").on(t.slug),
+    publicIdUnique: uniqueIndex("properties_public_id_unique").on(t.publicId),
   })
 );
 
@@ -198,3 +217,47 @@ export const propertyImages = pgTable(
     byProperty: uniqueIndex("property_images_property_sort_unique").on(t.propertyId, t.sortOrder),
   })
 );
+
+// --------------------
+// LEADS (заявки/обращения)
+// --------------------
+export const leads = pgTable("leads", {
+  id: serial("id").primaryKey(),
+
+  name: varchar("name", { length: 120 }).notNull(),
+  phone: varchar("phone", { length: 60 }).notNull(),
+  email: varchar("email", { length: 160 }).notNull(),
+
+  message: text("message"),
+  lang: varchar("lang", { length: 2 }).notNull(),
+  pageUrl: text("page_url").notNull(),
+
+  propertyId: integer("property_id").references(() => properties.id, { onDelete: "set null" }),
+  propertySlug: varchar("property_slug", { length: 255 }),
+
+  // NEW
+  status: varchar("status", { length: 20 }).notNull().default("new"),
+  source: varchar("source", { length: 80 }),
+  processedAt: timestamp("processed_at", { withTimezone: true }),
+
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// --------------------
+// LEAD RATE LIMITS (anti-spam)
+// --------------------
+export const leadRateLimits = pgTable(
+  "lead_rate_limits",
+  {
+    id: serial("id").primaryKey(),
+    ip: varchar("ip", { length: 64 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    ipIdx: index("lead_rate_limits_ip_idx").on(t.ip),
+    createdAtIdx: index("lead_rate_limits_created_at_idx").on(t.createdAt),
+  })
+);
+
+
+

@@ -1,6 +1,7 @@
 // app/[lang]/properties/[slug]/page.tsx
 import Header from "@/components/Header/Header";
 import PropertyGallery from "@/components/PropertyGallery/PropertyGallery";
+import LeadContactForm from "@/components/LeadContactForm/LeadContactForm";
 import { getDictionary, isLocale, type Locale } from "@/i18n/dictionaries";
 import { getPropertyBySlug } from "@/app/lib/publicProperties";
 import styles from "./property.module.css";
@@ -117,16 +118,54 @@ export default async function PropertyDetailPage({
               </div>
             ) : null}
 
-            {/* CTA */}
-            <div className={styles.cta}>
-              <div className={styles.ctaText}>
-                {lang === "es"
-                  ? "¿Te interesa esta propiedad? Escríbenos y te ayudamos."
-                  : "Interested in this property? Message us and we’ll help."}
-              </div>
-              <a className="btn btnPrimary" href={`/${lang}#contact`}>
-                {lang === "es" ? "Contactar" : "Contact"}
-              </a>
+            {/* ✅ Lead form (anchored) */}
+            <div id="contact" className={styles.block}>
+              <LeadContactForm
+                lang={uiLang}
+                propertyId={property.id}
+                propertySlug={property.slug}
+                title={lang === "es" ? "Solicitar detalles" : "Request details"}
+                subtitle={
+                  lang === "es"
+                    ? "Déjanos tus datos y te contactaremos por esta propiedad."
+                    : "Leave your details and we’ll contact you about this property."
+                }
+                labels={
+                  lang === "es"
+                    ? {
+                        name: "Nombre",
+                        phone: "Teléfono",
+                        email: "Email",
+                        message: "Mensaje",
+                        send: "Enviar",
+                        sending: "Enviando...",
+                        sent: "Enviado ✅",
+                        namePlaceholder: "Tu nombre",
+                        phonePlaceholder: "+34 ...",
+                        emailPlaceholder: "tu@email.com",
+                        messagePlaceholder: "Cuéntanos qué buscas…",
+                        errRequired: "Rellena nombre, teléfono y email.",
+                        errEmail: "Email no válido.",
+                        errFailed: "Error al enviar. Inténtalo de nuevo.",
+                      }
+                    : {
+                        name: "Your Name",
+                        phone: "Phone",
+                        email: "Email",
+                        message: "Message",
+                        send: "Send Message",
+                        sending: "Sending...",
+                        sent: "Sent ✅",
+                        namePlaceholder: "Name",
+                        phonePlaceholder: "+34 ...",
+                        emailPlaceholder: "you@email.com",
+                        messagePlaceholder: "Tell us what you are looking for…",
+                        errRequired: "Please fill name, phone and email.",
+                        errEmail: "Invalid email.",
+                        errFailed: "Failed to send. Try again.",
+                      }
+                }
+              />
             </div>
           </div>
         </section>

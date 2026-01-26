@@ -202,7 +202,6 @@ p {
 /* Make <button class="btn"> look same as <a class="btn"> */
 button.btn {
   appearance: none;
-  background: none;
 }
 
 /* --- Inputs baseline (so forms look consistent) --- */
@@ -221,6 +220,43 @@ select {
 
 ::placeholder {
   color: rgba(28, 28, 28, 0.45);
+}
+
+/* --- Segmented controls (tabs-like buttons) --- */
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 999px; /* pill */
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(6px);
+}
+
+.seg .btn {
+  border: 0;              /* граница у контейнера */
+  border-radius: 0;       /* чтобы не ломать pill */
+  padding: 10px 14px;
+  min-height: 38px;
+}
+
+.seg .btn + .btn {
+  border-left: 1px solid var(--border);
+}
+
+.seg .btnPrimary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.seg .btnPrimary:hover {
+  background: var(--accentHover);
+}
+
+.seg .btnGhost {
+  background: transparent;
+}
+.seg .btnGhost:hover {
+  background: rgba(255, 255, 255, 0.92);
 }
 
 

@@ -29,6 +29,24 @@ export default function Filters({
   // ✅ по умолчанию свернуто
   const [open, setOpen] = useState(false);
 
+  const [search, setSearch] = useState("");
+  const [showAll, setShowAll] = useState(false);
+
+  const filteredFeatures = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return features;
+    return features.filter((f) => {
+      const key = String(f.key || "").toLowerCase();
+      const label = String(f.label || "").toLowerCase();
+      return key.includes(q) || label.includes(q);
+    });
+  }, [features, search]);
+
+  const visibleFeatures = useMemo(() => {
+    if (showAll) return filteredFeatures;
+    return filteredFeatures.slice(0, 8);
+  }, [filteredFeatures, showAll]);
+
   const selectedType = (sp.get("type") || "").trim();
 
   const selectedFeatures = useMemo(() => {
@@ -79,6 +97,7 @@ export default function Filters({
 
   function clearAll() {
     const next = new URLSearchParams(sp.toString());
+    next.delete("deal");      // ✅ NEW
     next.delete("type");
     next.delete("features");
     next.set("page", "1");
@@ -92,18 +111,17 @@ export default function Filters({
       <div className={styles.filtersTop}>
         <button
           type="button"
-          className={styles.filtersToggle}
+          className={`btn btnGhost ${styles.filtersToggleBtn}`}
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
         >
-          <span className={styles.filtersTitle}>
+          <span className={styles.filtersToggleText}>
             {lang === "es" ? "Filtros" : "Filters"}
           </span>
 
-          {/* маленький индикатор, что фильтры активны */}
           {hasActiveFilters && (
-            <span className={styles.filtersBadge}>
-              {lang === "es" ? "Activos" : "Active"}
+            <span className={styles.filtersCount}>
+              {selectedFeatures.size + (selectedType ? 1 : 0)}
             </span>
           )}
 
@@ -117,58 +135,75 @@ export default function Filters({
           type="button"
           onClick={clearAll}
           disabled={!hasActiveFilters}
-          title={hasActiveFilters ? "" : (lang === "es" ? "Nada que limpiar" : "Nothing to clear")}
+          title={
+            hasActiveFilters ? "" : (lang === "es" ? "Nada que limpiar" : "Nothing to clear")
+          }
         >
           {lang === "es" ? "Limpiar" : "Clear"}
         </button>
       </div>
 
       {open && (
-        <div className={styles.filtersGrid}>
-          <label className={styles.field}>
-            <span className={styles.label}>
-              {lang === "es" ? "Tipo" : "Type"}
-            </span>
+        <div className={styles.filtersPanel}>
+          <div className={styles.filtersGrid}>
+            <label className={styles.field}>
+              <span className={styles.label}>{lang === "es" ? "Tipo" : "Type"}</span>
+              <select
+                className={styles.select}
+                value={selectedType}
+                onChange={(e) => setType(e.target.value)}
+              >
+                <option value="">{lang === "es" ? "Todos" : "All"}</option>
+                <option value="apartment">{lang === "es" ? "Apartamento" : "Apartment"}</option>
+                <option value="villa">Villa</option>
+                <option value="townhouse">{lang === "es" ? "Adosado" : "Townhouse"}</option>
+                <option value="land">{lang === "es" ? "Terreno" : "Land"}</option>
+              </select>
+            </label>
 
-            {/* тип пока UI; когда добавишь property_type в БД — включим в запрос */}
-            <select
-              className={styles.select}
-              value={selectedType}
-              onChange={(e) => setType(e.target.value)}
-            >
-              <option value="">{lang === "es" ? "Todos" : "All"}</option>
-              <option value="apartment">
-                {lang === "es" ? "Apartamento" : "Apartment"}
-              </option>
-              <option value="villa">Villa</option>
-              <option value="townhouse">
-                {lang === "es" ? "Adosado" : "Townhouse"}
-              </option>
-              <option value="land">{lang === "es" ? "Terreno" : "Land"}</option>
-            </select>
-          </label>
+            <div className={styles.field}>
+              <div className={styles.amenitiesHead}>
+                <span className={styles.label}>{lang === "es" ? "Comodidades" : "Amenities"}</span>
 
-          <div className={styles.field}>
-            <span className={styles.label}>
-              {lang === "es" ? "Comodidades" : "Amenities"}
-            </span>
+                {/* мини-поиск по amenities */}
+                <input
+                  className={styles.search}
+                  placeholder={lang === "es" ? "Buscar…" : "Search…"}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
 
-            <div className={styles.features}>
-              {features.map((f) => {
-                const key = String(f.key || "").trim().toLowerCase();
-                const checked = selectedFeatures.has(key);
+              <div className={styles.featuresCompact}>
+                {visibleFeatures.map((f) => {
+                  const key = String(f.key || "").trim().toLowerCase();
+                  const checked = selectedFeatures.has(key);
 
-                return (
-                  <label key={f.key} className={styles.featureItem}>
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => toggleFeature(key)}
-                    />
-                    <span>{f.label}</span>
-                  </label>
-                );
-              })}
+                  return (
+                    <button
+                      key={f.key}
+                      type="button"
+                      className={`btn ${checked ? "btnPrimary" : "btnGhost"} ${styles.pill}`}
+                      onClick={() => toggleFeature(key)}
+                      aria-pressed={checked}
+                    >
+                      {f.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {filteredFeatures.length > 8 && (
+                <button
+                  type="button"
+                  className={`btn btnGhost ${styles.moreBtn}`}
+                  onClick={() => setShowAll((v) => !v)}
+                >
+                  {showAll
+                    ? (lang === "es" ? "Mostrar menos" : "Show less")
+                    : (lang === "es" ? `Mostrar todo (${filteredFeatures.length})` : `Show all (${filteredFeatures.length})`)}
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -23,12 +23,18 @@
 
 /* logo */
 .logo {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  letter-spacing: 0.08em;
-  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
   cursor: pointer;
+  line-height: 0; /* убирает лишнюю высоту */
+}
+
+/* сам логотип-картинка */
+.logoImg {
+  height: 75px;   /* ✅ высота логотипа в хедере */
+  width: auto;
+  display: block;
+  object-fit: contain;
 }
 
 .logo:focus-visible {
@@ -369,5 +375,12 @@
 
   .lang {
     display: none; /* языки доступны в мобильном меню */
+  }
+}
+
+/* mobile */
+@media (max-width: 640px) {
+  .logoImg {
+    height: 65px;
   }
 }

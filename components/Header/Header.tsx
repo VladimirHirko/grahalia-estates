@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "./Header.module.css";
 import { scrollToHash } from "@/utils/smoothScroll";
+import Image from "next/image";
 
 type NavItem = { id: string; label: string };
 
@@ -121,6 +122,9 @@ export default function Header({ lang, t }: HeaderProps) {
 
   // 1) Active section picker
   useEffect(() => {
+    // ✅ только главная страница имеет секции
+    if (!isHome) return;
+
     // Если мы на каталоге — секций нет, подсвечиваем Properties вручную
     if (isCatalog) {
       setActiveId("properties");
@@ -256,11 +260,17 @@ export default function Header({ lang, t }: HeaderProps) {
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") goTo("home");
           }}
+          aria-label="Grahalia Estates"
         >
-          <span className={styles.logoMark}>GRAHALIA</span>
-          <span className={styles.logoSub}>ESTATES</span>
+          <Image
+            src="/logo.png"
+            alt="Grahalia Estates"
+            width={520}
+            height={96}
+            priority
+            className={styles.logoImg}
+          />
         </div>
-
         {/* Desktop nav */}
         <nav className={styles.nav} ref={(el) => (navRef.current = el)}>
           <span

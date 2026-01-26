@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { sql } from "drizzle-orm";
 import { db } from "@/db";
 import UploadForms from "./UploadForms";
+import RentFieldsSync from "../RentFieldsSync";
 
 export const dynamic = "force-dynamic";
 
@@ -21,10 +22,29 @@ function toDecimal(s: string) {
   return Number.isFinite(n) ? n : null;
 }
 
+function normalizeSlugBase(input: string) {
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 220);
+}
+
 function normalizePublicPath(p: unknown) {
   const s = String(p ?? "").trim();
   if (!s) return null;
   return s.startsWith("/") ? s : `/${s}`;
+}
+
+function stripPublicIdSuffix(slug: string, publicId: string) {
+  const s = String(slug ?? "");
+  const pid = String(publicId ?? "").trim().toLowerCase();
+  if (!s || !pid) return s;
+  const suffix = `-${pid}`;
+  return s.toLowerCase().endsWith(suffix) ? s.slice(0, -suffix.length) : s;
 }
 
 type PageProps = {
@@ -34,7 +54,6 @@ type PageProps = {
 export default async function AdminPropertyEditPage({ params }: PageProps) {
   const resolved = await params;
   const id = Number(resolved.id);
-
   if (!Number.isFinite(id)) redirect("/admin/properties");
 
   const propRes = await db.execute(sql`SELECT * FROM properties WHERE id = ${id} LIMIT 1`);
@@ -51,7 +70,7 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
 
   const plansHref = normalizePublicPath(prop.plans_url);
 
-  // ✅ 1) Получаем все фичи (пока показываем EN-лейблы; можно расширить позже)
+  // features list (EN labels)
   const featuresRes = await db.execute(sql`
     SELECT
       f.id,
@@ -64,7 +83,7 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
   `);
   const features = ((featuresRes as any).rows ?? []) as Array<{ id: number; key: string; label: string }>;
 
-  // ✅ 2) Текущие выбранные фичи для объекта
+  // selected features
   const selectedRes = await db.execute(sql`
     SELECT feature_id
     FROM property_features
@@ -76,25 +95,59 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
   async function updateBase(formData: FormData) {
     "use server";
 
-    const slugRaw = String(formData.get("slug") || "").trim();
-    const slug = slugRaw
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "")
-      .slice(0, 255);
+    const publicId = String((prop as any).public_id ?? "").trim();
+    const publicIdLower = publicId.toLowerCase();
 
-    if (!slug) redirect(`/admin/properties/${id}`);
+    // base slug -> финальный slug = `${baseSlug}-${publicIdLower}`
+    const baseSlugRaw = String(formData.get("baseSlug") || "");
+    const baseSlug = normalizeSlugBase(baseSlugRaw);
+
+    if (!publicId || !baseSlug) redirect(`/admin/properties/${id}`);
+    const finalSlug = `${baseSlug}-${publicIdLower}`;
 
     const isPublished = formData.get("isPublished") === "on";
+
     const price = toDecimal(String(formData.get("price") || ""));
     const currency =
       String(formData.get("currency") || "EUR")
         .trim()
         .toUpperCase()
         .slice(0, 3) || "EUR";
+
     const location = String(formData.get("location") || "").trim() || null;
+
+    const dealTypeRaw = String(formData.get("dealType") || "sale").trim().toLowerCase();
+    const dealType = dealTypeRaw === "rent" ? "rent" : "sale";
+
+    const rentTypeRaw = String(formData.get("rentType") || "").trim().toLowerCase();
+    const rentType = ["long_term", "short_term", "holiday"].includes(rentTypeRaw) ? rentTypeRaw : null;
+
+    const rentPeriodRaw = String(formData.get("rentPeriod") || "").trim().toLowerCase();
+    const rentPeriod = ["month", "week", "day"].includes(rentPeriodRaw) ? rentPeriodRaw : null;
+
+    const rentPrice = toDecimal(String(formData.get("rentPrice") || ""));
+
+    const finalRentType = dealType === "rent" ? rentType : null;
+    const finalRentPeriod = dealType === "rent" ? rentPeriod : null;
+    const finalRentPrice = dealType === "rent" ? rentPrice : null;
+
+    if (dealType === "rent") {
+      if (!finalRentType || finalRentPrice === null) {
+        redirect(`/admin/properties/${id}`);
+      }
+    }
+
+    const propertyTypeRaw = String(formData.get("propertyType") || "").trim().toLowerCase();
+    const propertyType = propertyTypeRaw || null;
+
+    const conditionRaw = String(formData.get("condition") || "").trim().toLowerCase();
+    const condition = conditionRaw || null;
+
+    const statusRaw = String(formData.get("status") || "available").trim().toLowerCase();
+    const status = ["available", "reserved", "sold"].includes(statusRaw) ? statusRaw : "available";
+
+    const floor = toInt(String(formData.get("floor") || ""));
+    const totalFloors = toInt(String(formData.get("totalFloors") || ""));
 
     const descriptionEn = String(formData.get("descriptionEn") || "").trim() || null;
     const descriptionEs = String(formData.get("descriptionEs") || "").trim() || null;
@@ -106,61 +159,90 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
     const builtArea = toDecimal(String(formData.get("builtAreaM2") || ""));
     const terraceArea = toDecimal(String(formData.get("terraceAreaM2") || ""));
 
-    // ✅ Amenities (features) из чекбоксов
     const rawFeatureIds = formData.getAll("features");
     const featureIds = rawFeatureIds
       .map((v) => Number(String(v)))
       .filter((n) => Number.isFinite(n)) as number[];
 
-    // 1) update базовых полей
-    await db.execute(sql`
-      UPDATE properties
-      SET
-        slug = ${slug},
-        is_published = ${isPublished},
-        price = ${price},
-        currency = ${currency},
-        location = ${location},
-        description_en = ${descriptionEn},
-        description_es = ${descriptionEs},
-        bedrooms = ${bedrooms},
-        bathrooms = ${bathrooms},
-        plot_area_m2 = ${plotArea},
-        built_area_m2 = ${builtArea},
-        terrace_area_m2 = ${terraceArea},
-        updated_at = NOW()
-      WHERE id = ${id}
-    `);
+    try {
+      // ✅ транзакция: база + amenities синхронизируются атомарно
+      await db.execute(sql`BEGIN`);
 
-    // 2) sync amenities (property_features)
-    //    - удаляем старые связи
-    //    - вставляем новые (если есть)
-    await db.execute(sql`
-      DELETE FROM property_features
-      WHERE property_id = ${id}
-    `);
-
-    if (featureIds.length > 0) {
-      const valuesSql = sql.join(
-        featureIds.map((fid) => sql`(${id}, ${fid})`),
-        sql`, `
-      );
-
-      // Если у тебя есть уникальность/PK (property_id, feature_id), это безопасно
       await db.execute(sql`
-        INSERT INTO property_features (property_id, feature_id)
-        VALUES ${valuesSql}
-        ON CONFLICT DO NOTHING
+        UPDATE properties
+        SET
+          slug = ${finalSlug},
+          is_published = ${isPublished},
+          price = ${price},
+          currency = ${currency},
+          deal_type = ${dealType},
+          rent_type = ${finalRentType},
+          rent_price = ${finalRentPrice},
+          rent_period = ${finalRentPeriod},
+          property_type = ${propertyType},
+          condition = ${condition},
+          status = ${status},
+          floor = ${floor},
+          total_floors = ${totalFloors},
+          location = ${location},
+          description_en = ${descriptionEn},
+          description_es = ${descriptionEs},
+          bedrooms = ${bedrooms},
+          bathrooms = ${bathrooms},
+          plot_area_m2 = ${plotArea},
+          built_area_m2 = ${builtArea},
+          terrace_area_m2 = ${terraceArea},
+          updated_at = NOW()
+        WHERE id = ${id}
       `);
+
+      await db.execute(sql`
+        DELETE FROM property_features
+        WHERE property_id = ${id}
+      `);
+
+      if (featureIds.length > 0) {
+        const valuesSql = sql.join(
+          featureIds.map((fid) => sql`(${id}, ${fid})`),
+          sql`, `
+        );
+
+        await db.execute(sql`
+          INSERT INTO property_features (property_id, feature_id)
+          VALUES ${valuesSql}
+          ON CONFLICT DO NOTHING
+        `);
+      }
+
+      await db.execute(sql`COMMIT`);
+    } catch (e) {
+      try {
+        await db.execute(sql`ROLLBACK`);
+      } catch {
+        // ignore rollback errors
+      }
+      console.error("UPDATE PROPERTY ERROR:", e);
+      redirect(`/admin/properties/${id}`);
     }
 
     redirect(`/admin/properties/${id}`);
   }
 
+  const baseSlugDefault = stripPublicIdSuffix(String(prop.slug ?? ""), String(prop.public_id ?? ""));
+
   return (
     <main style={{ padding: 18 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
         <h1 style={{ margin: 0 }}>Edit property #{id}</h1>
+
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <Link href="/admin/properties" style={btnGhost}>
             ← Back
@@ -174,12 +256,67 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
       {/* Base fields + Amenities */}
       <section style={card}>
         <form action={updateBase}>
+          <RentFieldsSync />
+
           <div style={grid2}>
-            <Field label="Slug">
-              <input name="slug" defaultValue={prop.slug ?? ""} style={input} />
+            <Field label="Public ID">
+              <input value={prop.public_id ?? ""} readOnly style={{ ...input, background: "#f6f6f6" }} />
             </Field>
+
+            <Field label="Base slug">
+              <input name="baseSlug" defaultValue={baseSlugDefault} style={input} />
+            </Field>
+          </div>
+
+          <div style={grid3}>
+            <Field label="Deal type">
+              <select name="dealType" id="dealType" defaultValue={prop.deal_type ?? "sale"} style={input}>
+                <option value="sale">Sale</option>
+                <option value="rent">Rent</option>
+              </select>
+            </Field>
+
+            <Field label="Status">
+              <select name="status" defaultValue={prop.status ?? "available"} style={input}>
+                <option value="available">Available</option>
+                <option value="reserved">Reserved</option>
+                <option value="sold">Sold</option>
+              </select>
+            </Field>
+
             <Field label="Currency">
               <input name="currency" defaultValue={prop.currency ?? "EUR"} style={input} />
+            </Field>
+          </div>
+
+          <div style={grid3}>
+            <Field label="Property type">
+              <select name="propertyType" defaultValue={prop.property_type ?? ""} style={input}>
+                <option value="">—</option>
+                <option value="villa">Villa</option>
+                <option value="house">House</option>
+                <option value="townhouse">Townhouse</option>
+                <option value="apartment">Apartment</option>
+                <option value="penthouse">Penthouse</option>
+                <option value="duplex">Duplex</option>
+                <option value="studio">Studio</option>
+                <option value="plot">Plot</option>
+              </select>
+            </Field>
+
+            <Field label="Condition">
+              <select name="condition" defaultValue={prop.condition ?? ""} style={input}>
+                <option value="">—</option>
+                <option value="new_build">New build</option>
+                <option value="resale">Resale</option>
+              </select>
+            </Field>
+
+            <Field label="Floor / Total floors">
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <input name="floor" defaultValue={prop.floor ?? ""} style={input} placeholder="Floor" />
+                <input name="totalFloors" defaultValue={prop.total_floors ?? ""} style={input} placeholder="Total" />
+              </div>
             </Field>
           </div>
 
@@ -195,9 +332,53 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
             </Field>
           </div>
 
+          {/* RENT fields (visible only when Deal type = Rent) */}
+          <div
+            id="rentFields"
+            style={{
+              marginTop: 12,
+              padding: 14,
+              borderRadius: 14,
+              border: "1px dashed #E2E2DE",
+              background: "#fafafa",
+              display: "none", // ✅ чтобы не мигало
+            }}
+          >
+            <div style={{ fontWeight: 700, marginBottom: 10 }}>Rent details</div>
+
+            <div style={grid3}>
+              <Field label="Rent type">
+                <select name="rentType" data-rent-input defaultValue={prop.rent_type ?? ""} style={input}>
+                  <option value="">—</option>
+                  <option value="long_term">Long-term</option>
+                  <option value="short_term">Short-term</option>
+                  <option value="holiday">Holiday</option>
+                </select>
+              </Field>
+
+              <Field label="Rent price">
+                <input name="rentPrice" data-rent-input defaultValue={prop.rent_price ?? ""} style={input} />
+              </Field>
+
+              <Field label="Rent period">
+                <select name="rentPeriod" data-rent-input defaultValue={prop.rent_period ?? ""} style={input}>
+                  <option value="">—</option>
+                  <option value="month">/ month</option>
+                  <option value="week">/ week</option>
+                  <option value="day">/ day</option>
+                </select>
+              </Field>
+            </div>
+
+            <div style={{ marginTop: 10, fontSize: 12, opacity: 0.7 }}>
+              These fields are required for Rent objects (type + price).
+            </div>
+          </div>
+
           <Field label="Location">
             <input name="location" defaultValue={prop.location ?? ""} style={input} />
           </Field>
+
           <Field label="Description (EN)">
             <textarea
               name="descriptionEn"
@@ -218,7 +399,6 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
             />
           </Field>
 
-
           <div style={grid3}>
             <Field label="Plot area (m²)">
               <input name="plotAreaM2" defaultValue={prop.plot_area_m2 ?? ""} style={input} />
@@ -231,7 +411,7 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
             </Field>
           </div>
 
-          {/* ✅ Amenities */}
+          {/* Amenities */}
           <div style={{ marginTop: 10, borderTop: "1px solid #E2E2DE", paddingTop: 12 }}>
             <div style={{ fontWeight: 700, marginBottom: 8 }}>Amenities</div>
 
@@ -243,12 +423,7 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
                   const checked = selectedSet.has(Number(f.id));
                   return (
                     <label key={f.id} style={amenityItem}>
-                      <input
-                        type="checkbox"
-                        name="features"
-                        value={String(f.id)}
-                        defaultChecked={checked}
-                      />
+                      <input type="checkbox" name="features" value={String(f.id)} defaultChecked={checked} />
                       <span style={{ marginLeft: 8 }}>{f.label}</span>
                     </label>
                   );
@@ -331,7 +506,6 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
                     <div style={{ marginTop: 6, opacity: 0.7, wordBreak: "break-all" }}>{img.url}</div>
 
                     <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      {/* Set cover */}
                       <form action={`/api/admin/properties/${id}/images`} method="post">
                         <input type="hidden" name="_method" value="setCover" />
                         <input type="hidden" name="imageId" value={String(img.id)} />
@@ -340,7 +514,6 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
                         </button>
                       </form>
 
-                      {/* Move up */}
                       <form action={`/api/admin/properties/${id}/images`} method="post">
                         <input type="hidden" name="_method" value="move" />
                         <input type="hidden" name="dir" value="up" />
@@ -350,7 +523,6 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
                         </button>
                       </form>
 
-                      {/* Move down */}
                       <form action={`/api/admin/properties/${id}/images`} method="post">
                         <input type="hidden" name="_method" value="move" />
                         <input type="hidden" name="dir" value="down" />
@@ -360,13 +532,13 @@ export default async function AdminPropertyEditPage({ params }: PageProps) {
                         </button>
                       </form>
 
-                      {/* Delete */}
                       <form action={`/api/admin/properties/${id}/images`} method="post">
                         <input type="hidden" name="_method" value="delete" />
                         <input type="hidden" name="imageId" value={String(img.id)} />
                         <button type="submit" style={btnMiniDanger}>
                           Delete
                         </button>
+
                       </form>
                     </div>
                   </div>

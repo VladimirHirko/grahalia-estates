@@ -1,0 +1,294 @@
+.footer {
+  border-top: 1px solid rgba(226, 226, 222, 0.8);
+  padding: 44px 0 26px;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.inner {
+  display: grid;
+  gap: 22px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 0.8fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.col {
+  display: grid;
+  gap: 10px;
+}
+
+.brand {
+  font-family: var(--font-playfair), Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.meta {
+  color: rgba(28, 28, 28, 0.55);
+  font-size: 13px;
+}
+
+.title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(28, 28, 28, 0.7);
+}
+
+.links,
+.socials {
+  display: grid;
+  gap: 10px;
+}
+
+.links a,
+.socials a {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.links a:hover {
+  color: var(--accent);
+}
+
+.socialDisabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.hint {
+  color: rgba(28, 28, 28, 0.45);
+  font-size: 12px;
+  margin-top: -4px;
+}
+
+.bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(226, 226, 222, 0.8);
+}
+
+.copy {
+  font-size: 12px;
+  color: rgba(28, 28, 28, 0.6);
+}
+
+.legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.legal a {
+  font-size: 12px;
+  color: rgba(28, 28, 28, 0.7);
+  font-weight: 600;
+}
+
+.legal a:hover {
+  color: var(--accent);
+}
+
+.manageBtn {
+  appearance: none;
+  border: 1px solid rgba(226, 226, 222, 0.9);
+  background: rgba(255, 255, 255, 0.6);
+  color: rgba(28, 28, 28, 0.8);
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.manageBtn:hover {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.brandBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;   /* ✅ центрируем всё */
+  gap: 6px;              /* компактнее */
+  max-width: 260px;
+}
+
+.brandLogo {
+  width: 150px;
+  height: auto;
+  opacity: 0.95;
+}
+
+.location {
+  margin-top: -2px;      /* ✅ подтягиваем ближе к логотипу */
+  font-size: 13px;
+  color: rgba(28, 28, 28, 0.6);
+  text-align: center;
+  letter-spacing: 0.2px;
+}
+
+/* ===== Mobile footer layout: centered logo, links left, socials right ===== */
+
+/* Small phones: logo centered, then 2 columns below */
+@media (max-width: 519px) {
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 18px;
+    align-items: start;
+  }
+
+  /* Brand — на всю ширину и по центру */
+  .col:first-child {
+    grid-column: 1 / -1;
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+
+  /* Убираем текстовый слоган, если он ещё где-то был */
+  .tagline {
+    display: none;
+  }
+
+  /* Costa del Sol • Spain под логотипом, ближе */
+  .meta {
+    margin-top: 8px;
+    text-align: center;
+  }
+
+  /* Links — слева */
+  .col:nth-child(2) {
+    justify-self: start;
+    text-align: left;
+  }
+
+  /* Social — справа */
+  .col:nth-child(3) {
+    justify-self: end;
+    text-align: right;
+  }
+
+  .links {
+    display: grid;
+    gap: 10px;
+    padding-top: 6px;
+  }
+
+  .socials {
+    display: grid;
+    gap: 10px;
+    padding-top: 6px;
+  }
+
+  /* Bottom row */
+  .bottom {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 16px;
+    padding-top: 14px;
+  }
+
+  .copy {
+    text-align: left;
+  }
+
+  /* Legal в одну строку + wrap */
+  .legal {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 8px 14px;
+  }
+
+  /* Manage cookies — в той же группе, но не огромной полосой */
+  .manageBtn {
+    margin-left: auto; /* ✅ уезжает вправо */
+    padding: 8px 12px;
+    border-radius: 10px;
+    white-space: nowrap;
+  }
+}
+
+/* Wider mobile / small tablets: твой вариант “3 зоны в одну строку” */
+@media (min-width: 520px) and (max-width: 860px) {
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr; /* links | logo | social */
+    gap: 18px;
+    align-items: start;
+  }
+
+  /* Links слева */
+  .col:nth-child(2) {
+    order: 1;
+    justify-self: start;
+    text-align: left;
+  }
+
+  /* Brand по центру */
+  .col:first-child {
+    order: 2;
+    justify-self: center;
+    text-align: center;
+    display: grid;
+    justify-items: center;
+  }
+
+  /* Social справа */
+  .col:nth-child(3) {
+    order: 3;
+    justify-self: end;
+    text-align: right;
+  }
+
+  .tagline {
+    display: none;
+  }
+
+  .meta {
+    margin-top: 8px;
+    text-align: center;
+  }
+
+  .bottom {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-items: center;
+    margin-top: 18px;
+    padding-top: 14px;
+  }
+
+  .copy {
+    text-align: left;
+  }
+
+  .legal {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+  }
+
+  .manageBtn {
+    padding: 8px 12px;
+    border-radius: 10px;
+    white-space: nowrap;
+  }
+}

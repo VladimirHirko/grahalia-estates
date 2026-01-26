@@ -22,10 +22,26 @@ export type FeaturedItem = {
   area: number;
   image: string;
   slug?: string;
+
+  // ✅ для бейджей
+  dealType?: "sale" | "rent" | null;
+  isNewBuild?: boolean;
+  status?: "available" | "reserved" | "sold" | null;
+};
+
+type Props = {
+  lang: "en" | "es";
+  t: FeaturedDict;
+  items?: FeaturedItem[];
+  itemsPerView?: number;
+  intervalMs?: number;
+  randomStart?: boolean;
+  fadeMs?: number;
 };
 
 const fallbackFeatured: FeaturedItem[] = [
   {
+    id: "fallback-1",
     title: "Modern Villa in Marbella",
     location: "Marbella · Costa del Sol",
     price: "€1,250,000",
@@ -33,8 +49,12 @@ const fallbackFeatured: FeaturedItem[] = [
     baths: 3,
     area: 250,
     image: "/properties/p1.jpg",
+    slug: "modern-villa-marbella",
+    dealType: "sale",
+    isNewBuild: false,
   },
   {
+    id: "fallback-2",
     title: "Seaside Apartment in Estepona",
     location: "Estepona · Costa del Sol",
     price: "€850,000",
@@ -42,8 +62,12 @@ const fallbackFeatured: FeaturedItem[] = [
     baths: 2,
     area: 120,
     image: "/properties/p2.jpg",
+    slug: "seaside-apartment-estepona",
+    dealType: "sale",
+    isNewBuild: false,
   },
   {
+    id: "fallback-3",
     title: "Luxury Villa in Benahavís",
     location: "Benahavís · Costa del Sol",
     price: "Price on Request",
@@ -51,19 +75,11 @@ const fallbackFeatured: FeaturedItem[] = [
     baths: 5,
     area: 450,
     image: "/properties/p3.jpg",
+    slug: "luxury-villa-benahavis",
+    dealType: "sale",
+    isNewBuild: true,
   },
 ];
-
-type Props = {
-  lang: "en" | "es";
-  t: FeaturedDict;
-  items?: FeaturedItem[];
-
-  itemsPerView?: number;
-  intervalMs?: number;
-  randomStart?: boolean;
-  fadeMs?: number;
-};
 
 export default function Featured({
   lang,
@@ -74,11 +90,15 @@ export default function Featured({
   randomStart = true,
   fadeMs = 1000,
 }: Props) {
-  const pool: FeaturedItem[] = useMemo(() => {
+  const safeItemsPerView = Math.max(1, Math.floor(itemsPerView));
+
+  const pool = useMemo<FeaturedItem[]>(() => {
     return Array.isArray(items) && items.length > 0 ? items : fallbackFeatured;
   }, [items]);
 
-  const pageCount = Math.max(1, Math.ceil(pool.length / itemsPerView));
+  const pageCount = useMemo(() => {
+    return Math.max(1, Math.ceil(pool.length / safeItemsPerView));
+  }, [pool.length, safeItemsPerView]);
 
   const [page, setPage] = useState(0);
   const [isFading, setIsFading] = useState(false);
@@ -90,12 +110,13 @@ export default function Featured({
     return () => {
       if (intervalRef.current) window.clearInterval(intervalRef.current);
       if (fadeTimeoutRef.current) window.clearTimeout(fadeTimeoutRef.current);
+      intervalRef.current = null;
+      fadeTimeoutRef.current = null;
     };
   }, []);
 
   useEffect(() => {
-    if (page >= pageCount) setPage(0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setPage((p) => (p >= pageCount ? 0 : p));
   }, [pageCount]);
 
   useEffect(() => {
@@ -125,10 +146,7 @@ export default function Featured({
     if (pageCount <= 1) return;
 
     if (intervalRef.current) window.clearInterval(intervalRef.current);
-
-    intervalRef.current = window.setInterval(() => {
-      goNext();
-    }, intervalMs);
+    intervalRef.current = window.setInterval(goNext, intervalMs);
 
     return () => {
       if (intervalRef.current) window.clearInterval(intervalRef.current);
@@ -138,15 +156,15 @@ export default function Featured({
   }, [pageCount, intervalMs, fadeMs]);
 
   const visible = useMemo(() => {
-    const start = page * itemsPerView;
-    const slice = pool.slice(start, start + itemsPerView);
+    const start = page * safeItemsPerView;
+    const slice = pool.slice(start, start + safeItemsPerView);
 
-    if (slice.length < itemsPerView && pool.length > slice.length) {
-      return slice.concat(pool.slice(0, itemsPerView - slice.length));
+    if (slice.length < safeItemsPerView && pool.length > slice.length) {
+      return slice.concat(pool.slice(0, safeItemsPerView - slice.length));
     }
 
     return slice;
-  }, [pool, page, itemsPerView]);
+  }, [pool, page, safeItemsPerView]);
 
   return (
     <section id="properties" className={`section ${styles.section}`}>
@@ -163,17 +181,33 @@ export default function Featured({
           style={{ ["--fade-ms" as any]: `${fadeMs}ms` }}
         >
           <div className={styles.grid}>
-            {visible.map((p) => (
-              <PropertyCard
-                key={String(p.id ?? p.title)}
-                property={{
-                  ...p,
-                  // ✅ теперь "View Details" ведёт на детальную страницу объекта
-                  href: p.slug ? `/${lang}/properties/${p.slug}` : `/${lang}#contact`,
-                }}
-                t={t.card}
-              />
-            ))}
+            {visible.map((p) => {
+              const href = p.slug ? `/${lang}/properties/${p.slug}` : `/${lang}#contact`;
+
+              return (
+                <PropertyCard
+                  key={String(p.id ?? `${p.title}-${href}`)}
+                  property={{
+                    title: p.title,
+                    location: p.location,
+                    price: p.price,
+                    beds: p.beds,
+                    baths: p.baths,
+                    area: p.area,
+                    image: p.image,
+                    href,
+
+                    dealType: p.dealType ?? null,
+                    isNewBuild: Boolean(p.isNewBuild),
+
+                    // ✅ статус
+                    status: (p as any).status ?? null,
+                  }}
+                  t={t.card}
+                />
+
+              );
+            })}
           </div>
         </div>
 

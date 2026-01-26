@@ -1,6 +1,7 @@
 .section {
   padding: 72px 0 90px;
   border-top: 1px solid rgba(226, 226, 222, 0.8);
+  overflow: visible;
 }
 
 .head {
@@ -15,25 +16,31 @@
   margin-top: 16px;
 }
 
+/* --- Form --- */
 .form {
   background: rgba(255, 255, 255, 0.62);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 22px;
   box-shadow: var(--shadow);
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+  align-items: end; /* ✅ выравниваем колонки по нижнему краю */
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
   margin-top: 12px;
+  gap: 0; /* ✅ чтобы отступ задавал label */
 }
 
 .field:first-child {
@@ -41,16 +48,20 @@
 }
 
 .label {
+  display: block;
+  min-height: 16px;   /* ✅ одинаковая высота лейбла */
+  line-height: 16px;  /* ✅ чтобы нигде не "плавало" */
   font-size: 12px;
   color: rgba(28, 28, 28, 0.75);
   font-weight: 600;
+  margin-bottom: 6px; /* ✅ фиксируем отступ, вместо gap */
 }
 
 .input,
 .textarea {
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px 12px;
+  border-radius: 10px;     /* было 12 */
+  padding: 9px 12px;      /* было 12 12 */
   font-size: 14px;
   outline: none;
   background: rgba(255, 255, 255, 0.85);
@@ -58,15 +69,60 @@
 
 .input:focus,
 .textarea:focus {
-  border-color: rgba(14, 94, 86, 0.45);
-  box-shadow: 0 0 0 4px rgba(14, 94, 86, 0.10);
+  border-color: rgba(43, 69, 55, 0.45); /* под твой --accent */
+  box-shadow: 0 0 0 4px rgba(43, 69, 55, 0.10);
 }
 
 .textarea {
-  min-height: 120px;
+  min-height: 96px;
+  max-height: 220px;
   resize: vertical;
 }
 
+/* ===== Contact primary button (always visible, no "lift" on hover) ===== */
+.form :global(.btn.btnPrimary) {
+  margin-top: 10px;
+  width: 220px;
+  justify-content: center;
+
+  background: var(--accent) !important;
+  color: #fff !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+
+  border: 1px solid transparent;
+}
+
+/* hover = только смена цвета, без transform */
+.form :global(.btn.btnPrimary:hover) {
+  background: var(--accentHover) !important;
+  transform: none !important;
+}
+
+/* active оставляем "тап" как в глобале */
+.form :global(.btn.btnPrimary:active) {
+  transform: translateY(1px);
+}
+
+/* --- Status texts under button --- */
+.actionsRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.okText {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.errText {
+  color: #b00020;
+  font-weight: 600;
+}
+
+/* --- Info card --- */
 .infoCard {
   background: rgba(255, 255, 255, 0.62);
   border: 1px solid var(--border);
@@ -94,7 +150,7 @@
   border-radius: 10px;
   display: grid;
   place-items: center;
-  background: rgba(14, 94, 86, 0.08);
+  background: rgba(43, 69, 55, 0.08); /* под --accent */
 }
 
 .infoLink {
@@ -130,12 +186,7 @@
   margin-top: 28px;
 }
 
-.footerText {
-  margin-top: 14px;
-  color: rgba(28, 28, 28, 0.6);
-  font-size: 12px;
-}
-
+/* --- Responsive --- */
 @media (max-width: 960px) {
   .grid {
     grid-template-columns: 1fr;
@@ -143,5 +194,11 @@
 
   .row {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .form :global(.btn.btnPrimary) {
+    width: 100%;
   }
 }

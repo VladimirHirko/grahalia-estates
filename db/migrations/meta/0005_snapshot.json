@@ -1,6 +1,6 @@
 {
-  "id": "836c0f31-16ca-449d-b096-5727e97c60b4",
-  "prevId": "12ca2264-fd63-4f6d-8e0e-e01cda60947d",
+  "id": "a2e12d03-7f7e-4b2d-a850-e169b94810a8",
+  "prevId": "836c0f31-16ca-449d-b096-5727e97c60b4",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -187,6 +187,25 @@
         "property_slug": {
           "name": "property_slug",
           "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'new'"
+        },
+        "source": {
+          "name": "source",
+          "type": "varchar(80)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "processed_at": {
+          "name": "processed_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
         },

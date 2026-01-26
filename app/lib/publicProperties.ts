@@ -1,42 +1,8 @@
 // app/lib/publicProperties.ts
 import { sql } from "drizzle-orm";
 import { db } from "@/db";
-
-/* -----------------------------
-   Shared helpers
------------------------------- */
-
-function titleFromSlug(slug: string) {
-  // "modern-villa-marbella" -> "Modern Villa Marbella"
-  return slug
-    .split("-")
-    .filter(Boolean)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
-}
-
-function formatPrice(opts: { lang: "en" | "es"; value: number | null; currency: string | null }) {
-  const { lang, value, currency } = opts;
-
-  if (value === null || value === undefined) {
-    return lang === "es" ? "Precio bajo consulta" : "Price on Request";
-  }
-
-  const cur = (currency || "EUR").toUpperCase();
-
-  try {
-    return new Intl.NumberFormat(lang === "es" ? "es-ES" : "en-GB", {
-      style: "currency",
-      currency: cur,
-      maximumFractionDigits: 0,
-    }).format(value);
-  } catch {
-    const n = new Intl.NumberFormat(lang === "es" ? "es-ES" : "en-GB", {
-      maximumFractionDigits: 0,
-    }).format(value);
-    return cur === "EUR" ? `€${n}` : `${n} ${cur}`;
-  }
-}
+import { formatDisplayPrice } from "@/app/lib/priceFormat";
+import { titleFromSlugClean } from "@/app/lib/propertyTitle";
 
 /* -----------------------------
    Featured (home page) - keep as is
@@ -97,7 +63,7 @@ export async function getFeaturedProperties(limit = 6): Promise<FeaturedProperty
     return {
       id: Number(p.id),
       slug,
-      title: titleFromSlug(slug || `property-${p.id}`),
+      title: titleFromSlugClean(slug),
       location: p.location ? String(p.location) : null,
       price: p.price !== null && p.price !== undefined ? Number(p.price) : null,
       currency: p.currency ? String(p.currency) : null,
@@ -127,16 +93,24 @@ export type CatalogItem = {
   location: string;
   priceText: string;
 
+  // ✅ аренда/продажа для бейджа
+  dealType: "sale" | "rent" | null;
+
   beds: number;
   baths: number;
   area: number;
 
   image: string;
   features: CatalogFeature[];
+
+  // ✅ NEW BUILD + STATUS
+  isNewBuild: boolean;
+  status: "available" | "reserved" | "sold" | null;
 };
 
 export type CatalogFilters = {
   type?: string | null;
+  deal?: "all" | "sale" | "rent" | null;
   featureKeys?: string[] | null; // объект должен иметь ВСЕ выбранные keys
 };
 
@@ -151,6 +125,29 @@ function normalizeFeatureKeys(v: unknown): string[] {
     .filter(Boolean);
 }
 
+function normalizeDealType(v: unknown): "sale" | "rent" | null {
+  const s = String(v ?? "").trim().toLowerCase();
+  return s === "sale" || s === "rent" ? (s as "sale" | "rent") : null;
+}
+
+function normalizeStatus(v: unknown): "available" | "reserved" | "sold" | null {
+  const s = String(v ?? "").trim().toLowerCase();
+  if (s === "available" || s === "reserved" || s === "sold") return s;
+  return null;
+}
+
+function isNewBuildFromCondition(v: unknown): boolean {
+  const s = String(v ?? "").trim().toLowerCase();
+  if (!s) return false;
+
+  // поддержим разные варианты хранения:
+  // "new_build", "new build", "newbuild", "New build", и т.д.
+  if (s === "new_build" || s === "new build" || s === "newbuild") return true;
+
+  // мягкий фоллбек (если в будущем будут варианты типа "new construction")
+  return s.includes("new");
+}
+
 export async function getCatalogItems(opts: {
   lang: "en" | "es";
   page: number;
@@ -162,11 +159,16 @@ export async function getCatalogItems(opts: {
   const page = Number.isFinite(opts.page) && opts.page > 0 ? Math.floor(opts.page) : 1;
 
   const type = (opts.filters?.type || "").trim() || null;
+
+  const dealRaw = String(opts.filters?.deal ?? "").trim().toLowerCase();
+  const deal = dealRaw === "sale" || dealRaw === "rent" ? dealRaw : null;
+
   const featureKeys = normalizeFeatureKeys(opts.filters?.featureKeys);
   const needFeatures = featureKeys.length > 0;
 
   // WHERE
   const whereParts: any[] = [sql`p.is_published = true`];
+  if (deal) whereParts.push(sql`p.deal_type = ${deal}`);
   if (HAS_PROPERTY_TYPE && type) whereParts.push(sql`p.property_type = ${type}`);
   const whereSql = sql.join(whereParts, sql` AND `);
 
@@ -247,8 +249,7 @@ export async function getCatalogItems(opts: {
 
   const idSqlList = sql.join(ids.map((id) => sql`${id}`), sql`, `);
 
-  // PROPS (без translations — безопасно)
-  // Если позже добавишь property_translations — переключишь флаг и JOIN включится
+  // PROPS
   let propsRows: any[] = [];
   if (!HAS_PROPERTY_TRANSLATIONS) {
     const res = await db.execute(sql`
@@ -258,9 +259,14 @@ export async function getCatalogItems(opts: {
         p.location,
         p.price,
         p.currency,
+        p.deal_type,
+        p.rent_price,
+        p.rent_period,
         p.bedrooms,
         p.bathrooms,
-        p.built_area_m2
+        p.built_area_m2,
+        p.condition,
+        p.status
       FROM properties p
       WHERE p.id IN (${idSqlList})
     `);
@@ -273,9 +279,14 @@ export async function getCatalogItems(opts: {
         p.location,
         p.price,
         p.currency,
+        p.deal_type,
+        p.rent_price,
+        p.rent_period,
         p.bedrooms,
         p.bathrooms,
         p.built_area_m2,
+        p.condition,
+        p.status,
         COALESCE(pt.title, NULL) AS title
       FROM properties p
       LEFT JOIN property_translations pt
@@ -331,22 +342,47 @@ export async function getCatalogItems(opts: {
 
     const slug = String(p?.slug ?? "");
     const title =
-      HAS_PROPERTY_TRANSLATIONS && p?.title ? String(p.title) : titleFromSlug(slug || `property-${id}`);
+      HAS_PROPERTY_TRANSLATIONS && p?.title
+        ? String(p.title)
+        : titleFromSlugClean(slug || `property-${id}`);
 
-    const priceValue = p?.price !== null && p?.price !== undefined ? Number(p.price) : null;
+    const dealType = normalizeDealType(p?.deal_type);
+
+    const salePrice = p?.price !== null && p?.price !== undefined ? Number(p.price) : null;
     const currency = p?.currency ? String(p.currency) : null;
+
+    const rentPrice =
+      p?.rent_price !== null && p?.rent_price !== undefined ? Number(p.rent_price) : null;
+    const rentPeriod = p?.rent_period ? String(p.rent_period) : null;
+
+    const isNewBuild = isNewBuildFromCondition(p?.condition);
+
+    const status = normalizeStatus(p?.status);
 
     return {
       id,
       slug,
       title,
       location: p?.location ? String(p.location) : "",
-      priceText: formatPrice({ lang, value: priceValue, currency }),
+      priceText: formatDisplayPrice({
+        lang,
+        dealType,
+        salePrice,
+        currency,
+        rentPrice,
+        rentPeriod,
+      }),
+      dealType,
+
       beds: p?.bedrooms !== null && p?.bedrooms !== undefined ? Number(p.bedrooms) : 0,
       baths: p?.bathrooms !== null && p?.bathrooms !== undefined ? Number(p.bathrooms) : 0,
       area: p?.built_area_m2 !== null && p?.built_area_m2 !== undefined ? Number(p.built_area_m2) : 0,
+
       image: coverMap.get(id) ?? "/properties/p1.jpg",
       features: featMap.get(id) ?? [],
+
+      isNewBuild,
+      status,
     };
   });
 
@@ -391,7 +427,6 @@ export type PropertyDetail = {
 export async function getPropertyBySlug(opts: { lang: "en" | "es"; slug: string }) {
   const { lang, slug } = opts;
 
-  // 1) property
   const propRes = await db.execute(sql`
     SELECT
       p.id,
@@ -401,6 +436,9 @@ export async function getPropertyBySlug(opts: { lang: "en" | "es"; slug: string 
       p.description_es,
       p.price,
       p.currency,
+      p.deal_type,
+      p.rent_price,
+      p.rent_period,
       p.bedrooms,
       p.bathrooms,
       p.built_area_m2,
@@ -420,14 +458,16 @@ export async function getPropertyBySlug(opts: { lang: "en" | "es"; slug: string 
       ? (p.description_es ? String(p.description_es) : "")
       : (p.description_en ? String(p.description_en) : "");
 
+  const title = titleFromSlugClean(String(p.slug || slug));
 
-  // title пока строим из slug (без translations, чтобы ничего не падало)
-  const title = titleFromSlug(String(p.slug || slug));
+  const dealType = normalizeDealType(p?.deal_type);
 
-  const priceValue = p.price !== null && p.price !== undefined ? Number(p.price) : null;
+  const salePrice = p.price !== null && p.price !== undefined ? Number(p.price) : null;
   const currency = p.currency ? String(p.currency) : null;
 
-  // 2) images
+  const rentPrice = p.rent_price !== null && p.rent_price !== undefined ? Number(p.rent_price) : null;
+  const rentPeriod = p.rent_period ? String(p.rent_period) : null;
+
   const imagesRes = await db.execute(sql`
     SELECT
       url,
@@ -444,7 +484,6 @@ export async function getPropertyBySlug(opts: { lang: "en" | "es"; slug: string 
     sortOrder: r.sort_order !== null && r.sort_order !== undefined ? Number(r.sort_order) : 0,
   }));
 
-  // 3) features
   const featsRes = await db.execute(sql`
     SELECT
       f.key,
@@ -463,9 +502,7 @@ export async function getPropertyBySlug(opts: { lang: "en" | "es"; slug: string 
   }));
 
   const plansUrlRaw = p.plans_url ? String(p.plans_url).trim() : "";
-  const plansUrl = plansUrlRaw
-    ? (plansUrlRaw.startsWith("/") ? plansUrlRaw : `/${plansUrlRaw}`)
-    : null;
+  const plansUrl = plansUrlRaw ? (plansUrlRaw.startsWith("/") ? plansUrlRaw : `/${plansUrlRaw}`) : null;
 
   return {
     id,
@@ -473,16 +510,19 @@ export async function getPropertyBySlug(opts: { lang: "en" | "es"; slug: string 
     title,
     location: p.location ? String(p.location) : "",
     description,
-    priceText: formatPrice({ lang, value: priceValue, currency }),
-
+    priceText: formatDisplayPrice({
+      lang,
+      dealType,
+      salePrice,
+      currency,
+      rentPrice,
+      rentPeriod,
+    }),
     beds: p.bedrooms !== null && p.bedrooms !== undefined ? Number(p.bedrooms) : 0,
     baths: p.bathrooms !== null && p.bathrooms !== undefined ? Number(p.bathrooms) : 0,
-    builtArea:
-      p.built_area_m2 !== null && p.built_area_m2 !== undefined
-        ? Number(p.built_area_m2)
-        : 0,
+    builtArea: p.built_area_m2 !== null && p.built_area_m2 !== undefined ? Number(p.built_area_m2) : 0,
 
-    plansUrl, // ✅ ВОТ ЗДЕСЬ — вместо прямого p.plans_url
+    plansUrl,
 
     images,
     features,

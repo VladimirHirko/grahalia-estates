@@ -3,12 +3,23 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+
+    "db:generate": "dotenv -e .env.local -- drizzle-kit generate",
+    "db:migrate": "dotenv -e .env.local -- drizzle-kit migrate",
+
+    "db:seed:features": "dotenv -e .env.local -- sh -lc 'psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f db/migrations/0004_seed_features.sql'",
+    "db:seed": "npm run db:seed:features",
+
+    "db:setup": "npm run db:migrate && npm run db:seed"
   },
+
   "dependencies": {
     "drizzle-orm": "^0.45.1",
     "next": "16.1.2",
+    "nodemailer": "^7.0.12",
     "pg": "^8.17.1",
     "react": "19.2.3",
     "react-dom": "19.2.3"
@@ -16,6 +27,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/nodemailer": "^7.0.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv-cli": "^11.0.0",
@@ -24,12 +36,5 @@
     "eslint-config-next": "16.1.2",
     "tailwindcss": "^4",
     "typescript": "^5"
-  },
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "db:generate": "dotenv -e .env.local -- drizzle-kit generate",
-    "db:migrate": "dotenv -e .env.local -- drizzle-kit migrate"
   }
 }

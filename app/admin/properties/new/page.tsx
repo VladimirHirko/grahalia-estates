@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { sql } from "drizzle-orm";
 import { db } from "@/db";
+import RentFieldsSync from "../RentFieldsSync";
+import RentFieldsToggle from "./RentFieldsToggle";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +23,17 @@ function toDecimal(v: FormDataEntryValue | null) {
   return Number.isFinite(n) ? n : null;
 }
 
+function normalizeSlugBase(input: string) {
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 220);
+}
+
 export default async function AdminPropertyNewPage() {
   // ✅ features для чекбоксов (EN labels, админка без i18n)
   const featuresRes = await db.execute(sql`
@@ -33,18 +46,32 @@ export default async function AdminPropertyNewPage() {
       ON ft.feature_id = f.id AND ft.lang = 'en'
     ORDER BY COALESCE(ft.label, f.key) ASC
   `);
-  const features = ((featuresRes as any).rows ?? []) as Array<{ id: number; key: string; label: string }>;
+  const features = ((featuresRes as any).rows ?? []) as Array<{
+    id: number;
+    key: string;
+    label: string;
+  }>;
 
   async function create(formData: FormData) {
     "use server";
 
-    const slugRaw = String(formData.get("slug") || "").trim();
-    const slug = slugRaw
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "");
+    console.log("FORM DATA:", Object.fromEntries(formData.entries()));
+    console.log("dealType:", formData.get("dealType"));
+    console.log("rentType:", formData.get("rentType"));
+    console.log("rentPrice:", formData.get("rentPrice"));
+    console.log("rentPeriod:", formData.get("rentPeriod"));
 
-    if (!slug) redirect("/admin/properties/new");
+    const slugRaw = String(formData.get("slug") || "");
+    const baseSlug = normalizeSlugBase(slugRaw);
+
+    if (!baseSlug) redirect("/admin/properties/new");
+
+    // nonce чтобы temp значения были уникальными даже при параллельных запросах
+    const nonce = `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+
+    // временные значения (проходим NOT NULL + unique)
+    const tempSlug = `${baseSlug}-${nonce}`;
+    const tempPublicId = `TMP-${Math.random().toString(36).slice(2, 10).toUpperCase()}`; // 12 chars примерно
 
     const isPublished = formData.get("isPublished") === "on";
 
@@ -57,17 +84,51 @@ export default async function AdminPropertyNewPage() {
     const bedrooms = toInt(formData.get("bedrooms"));
     const bathrooms = toInt(formData.get("bathrooms"));
 
-    // площади (оставляем как было)
     const plotAreaM2 = toInt(formData.get("plotAreaM2"));
     const builtAreaM2 = toInt(formData.get("builtAreaM2"));
     const terraceAreaM2 = toInt(formData.get("terraceAreaM2"));
 
-    // описание объекта
     const descriptionEn = String(formData.get("descriptionEn") || "").trim() || null;
     const descriptionEs = String(formData.get("descriptionEs") || "").trim() || null;
 
-    // планы (пока просто ссылка/путь)
     const plansUrl = String(formData.get("plansUrl") || "").trim() || null;
+
+    // ✅ NEW: deal/property/condition/status + floors
+    const dealTypeRaw = String(formData.get("dealType") || "sale").trim().toLowerCase();
+    const dealType = dealTypeRaw === "rent" ? "rent" : "sale";
+
+    const propertyTypeRaw = String(formData.get("propertyType") || "").trim().toLowerCase();
+    const propertyType = propertyTypeRaw || null;
+
+    const conditionRaw = String(formData.get("condition") || "").trim().toLowerCase();
+    const condition = conditionRaw || null;
+
+    const statusRaw = String(formData.get("status") || "available").trim().toLowerCase();
+    const status = ["available", "reserved", "sold"].includes(statusRaw) ? statusRaw : "available";
+
+    const floor = toInt(formData.get("floor"));
+    const totalFloors = toInt(formData.get("totalFloors"));
+
+    // ✅ RENT fields
+    const rentTypeRaw = String(formData.get("rentType") || "").trim().toLowerCase();
+    const rentType = ["long_term", "short_term", "holiday"].includes(rentTypeRaw) ? rentTypeRaw : null;
+
+    const rentPeriodRaw = String(formData.get("rentPeriod") || "").trim().toLowerCase();
+    const rentPeriod = ["month", "week", "day"].includes(rentPeriodRaw) ? rentPeriodRaw : null;
+
+    const rentPrice = toDecimal(formData.get("rentPrice"));
+
+    const finalRentType = dealType === "rent" ? rentType : null;
+    const finalRentPeriod = dealType === "rent" ? rentPeriod : null;
+    const finalRentPrice = dealType === "rent" ? rentPrice : null;
+
+    // ✅ серверная валидация: для rent — тип и цена обязательны
+    if (dealType === "rent") {
+      // rentType обязателен, цена — нет
+      if (!finalRentType) {
+        redirect("/admin/properties/new");
+      }
+    }
 
     // ✅ Amenities (features) из чекбоксов
     const rawFeatureIds = formData.getAll("features");
@@ -76,11 +137,15 @@ export default async function AdminPropertyNewPage() {
       .filter((n) => Number.isFinite(n)) as number[];
 
     try {
-      // 1) создаём property и получаем id
+      // ✅ транзакция: либо всё, либо ничего
+      await db.execute(sql`BEGIN`);
+
+      // 1) INSERT (с temp slug/public_id)
       const inserted = await db.execute(sql`
         INSERT INTO properties
           (
             slug,
+            public_id,
             is_published,
             price,
             currency,
@@ -92,11 +157,21 @@ export default async function AdminPropertyNewPage() {
             plot_area_m2,
             built_area_m2,
             terrace_area_m2,
-            plans_url
+            plans_url,
+            deal_type,
+            property_type,
+            condition,
+            status,
+            floor,
+            total_floors,
+            rent_type,
+            rent_price,
+            rent_period
           )
         VALUES
           (
-            ${slug},
+            ${tempSlug},
+            ${tempPublicId},
             ${isPublished},
             ${price},
             ${currency},
@@ -108,15 +183,40 @@ export default async function AdminPropertyNewPage() {
             ${plotAreaM2},
             ${builtAreaM2},
             ${terraceAreaM2},
-            ${plansUrl}
+            ${plansUrl},
+            ${dealType},
+            ${propertyType},
+            ${condition},
+            ${status},
+            ${floor},
+            ${totalFloors},
+            ${finalRentType},
+            ${finalRentPrice},
+            ${finalRentPeriod}
           )
         RETURNING id
       `);
 
       const newId = Number((inserted as any).rows?.[0]?.id);
-      if (!Number.isFinite(newId)) redirect("/admin/properties/new");
+      if (!Number.isFinite(newId)) {
+        await db.execute(sql`ROLLBACK`);
+        redirect("/admin/properties/new");
+      }
 
-      // 2) записываем amenities в property_features
+      // 2) финальные значения
+      const publicId = `GE-${String(newId).padStart(6, "0")}`;
+      const finalSlug = `${baseSlug}-${publicId.toLowerCase()}`;
+
+      await db.execute(sql`
+        UPDATE properties
+        SET
+          public_id = ${publicId},
+          slug = ${finalSlug},
+          updated_at = NOW()
+        WHERE id = ${newId}
+      `);
+
+      // 3) amenities
       if (featureIds.length > 0) {
         const valuesSql = sql.join(
           featureIds.map((fid) => sql`(${newId}, ${fid})`),
@@ -129,7 +229,15 @@ export default async function AdminPropertyNewPage() {
           ON CONFLICT DO NOTHING
         `);
       }
-    } catch {
+
+      await db.execute(sql`COMMIT`);
+    } catch (e) {
+      try {
+        await db.execute(sql`ROLLBACK`);
+      } catch {
+        // ignore rollback errors
+      }
+      console.error("CREATE PROPERTY ERROR:", e);
       redirect("/admin/properties/new");
     }
 
@@ -160,7 +268,10 @@ export default async function AdminPropertyNewPage() {
         </Link>
       </header>
 
+      <RentFieldsToggle />
       <form action={create} style={{ marginTop: 18 }}>
+        <RentFieldsSync />
+
         <div
           style={{
             border: "1px solid #E2E2DE",
@@ -173,6 +284,59 @@ export default async function AdminPropertyNewPage() {
             <input name="slug" required placeholder="modern-villa-marbella" style={inputStyle} />
           </Field>
 
+          <h2 style={{ fontSize: 18, marginTop: 18, marginBottom: 10 }}>Basics</h2>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <Field label="Deal type">
+              <select name="dealType" id="dealType" defaultValue="sale" style={inputStyle}>
+                <option value="sale">Sale</option>
+                <option value="rent">Rent</option>
+              </select>
+            </Field>
+
+            <Field label="Status">
+              <select name="status" defaultValue="available" style={inputStyle}>
+                <option value="available">Available</option>
+                <option value="reserved">Reserved</option>
+                <option value="sold">Sold</option>
+              </select>
+            </Field>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <Field label="Property type">
+              <select name="propertyType" defaultValue="" style={inputStyle}>
+                <option value="">—</option>
+                <option value="villa">Villa</option>
+                <option value="house">House</option>
+                <option value="townhouse">Townhouse</option>
+                <option value="apartment">Apartment</option>
+                <option value="penthouse">Penthouse</option>
+                <option value="duplex">Duplex</option>
+                <option value="studio">Studio</option>
+                <option value="plot">Plot</option>
+              </select>
+            </Field>
+
+            <Field label="Condition">
+              <select name="condition" defaultValue="" style={inputStyle}>
+                <option value="">—</option>
+                <option value="new_build">New build</option>
+                <option value="resale">Resale</option>
+              </select>
+            </Field>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <Field label="Floor">
+              <input name="floor" inputMode="numeric" placeholder="2" style={inputStyle} />
+            </Field>
+
+            <Field label="Total floors">
+              <input name="totalFloors" inputMode="numeric" placeholder="6" style={inputStyle} />
+            </Field>
+          </div>
+
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
             <Field label="Price" hint="например: 350000">
               <input name="price" inputMode="decimal" placeholder="350000" style={inputStyle} />
@@ -183,26 +347,59 @@ export default async function AdminPropertyNewPage() {
             </Field>
           </div>
 
+          {/* RENT fields (visible only when Deal type = Rent) */}
+          <div
+            id="rentFields"
+            style={{
+              marginTop: 12,
+              padding: 14,
+              borderRadius: 14,
+              border: "1px dashed #E2E2DE",
+              background: "#fafafa",
+              display: "none", // ✅ чтобы не мигало
+            }}
+          >
+            <div style={{ fontWeight: 700, marginBottom: 10 }}>Rent details</div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
+              <Field label="Rent type">
+                <select name="rentType" data-rent-input defaultValue="" style={inputStyle}>
+                  <option value="">—</option>
+                  <option value="long_term">Long-term</option>
+                  <option value="short_term">Short-term</option>
+                  <option value="holiday">Holiday</option>
+                </select>
+              </Field>
+
+              <Field label="Rent price" hint="например: 2000">
+                <input name="rentPrice" data-rent-input inputMode="decimal" placeholder="2000" style={inputStyle} />
+              </Field>
+
+              <Field label="Rent period">
+                <select name="rentPeriod" data-rent-input defaultValue="month" style={inputStyle}>
+                  <option value="">—</option>
+                  <option value="month">/ month</option>
+                  <option value="week">/ week</option>
+                  <option value="day">/ day</option>
+                </select>
+              </Field>
+            </div>
+
+            <div style={{ marginTop: 10, fontSize: 12, opacity: 0.7 }}>
+              These fields are required for Rent objects (type + price).
+            </div>
+          </div>
+
           <Field label="Location" hint="например: Marbella, Nueva Andalucía">
             <input name="location" placeholder="Marbella" style={inputStyle} />
           </Field>
 
           <Field label="Description (EN)" hint="Короткое описание на английском">
-            <textarea
-              name="descriptionEn"
-              rows={6}
-              placeholder="Short description in English..."
-              style={textarea}
-            />
+            <textarea name="descriptionEn" rows={6} placeholder="Short description in English..." style={textarea} />
           </Field>
 
           <Field label="Description (ES)" hint="Descripción en español">
-            <textarea
-              name="descriptionEs"
-              rows={6}
-              placeholder="Descripción en español..."
-              style={textarea}
-            />
+            <textarea name="descriptionEs" rows={6} placeholder="Descripción en español..." style={textarea} />
           </Field>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
@@ -231,7 +428,6 @@ export default async function AdminPropertyNewPage() {
             </Field>
           </div>
 
-          {/* ✅ Amenities */}
           <h2 style={{ fontSize: 18, marginTop: 18, marginBottom: 10 }}>Amenities</h2>
 
           {features.length === 0 ? (
@@ -294,6 +490,7 @@ export default async function AdminPropertyNewPage() {
             Если slug уже существует — форма откроется заново (позже добавим сообщение об ошибке).
           </p>
         </div>
+
       </form>
     </main>
   );

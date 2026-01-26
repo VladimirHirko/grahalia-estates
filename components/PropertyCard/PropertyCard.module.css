@@ -8,6 +8,7 @@
   flex-direction: column;
   height: 100%; /* ✅ важно: карточка тянется по высоте ячейки */
   transition: transform 0.16s ease, box-shadow 0.16s ease;
+  position: relative;
 }
 
 .card:hover {
@@ -28,6 +29,7 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  object-fit:cover;
 }
 
 .body {
@@ -36,7 +38,7 @@
   /* ✅ ключевой фикс: тело карточки управляет вертикальной раскладкой */
   display: flex;
   flex-direction: column;
-  flex: 1;        /* занимает всё оставшееся место */
+  flex: 1; /* занимает всё оставшееся место */
   min-height: 0;
 
   /* ✅ добавляем "ритм" между блоками */
@@ -133,4 +135,191 @@
 .more {
   font-size: 12px;
   color: var(--muted);
+}
+
+/* -------------------------------------------------
+   ✅ BADGES OVER PHOTO
+   For Sale / For Rent — справа сверху
+   New build — слева сверху
+-------------------------------------------------- */
+
+/* Оставляем (на случай если где-то ещё используется), но в новом варианте не обязателен */
+.badgeStack {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+/* ✅ Бейдж "For Sale / For Rent" — справа сверху */
+.dealBadge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 6px 10px;
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+/* ✅ Бейдж "New build" — слева сверху (БЕЗ dealBadge) */
+.newBuildBadge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: auto; /* важно */
+  z-index: 3;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 5px 10px;
+  border-radius: 999px;
+
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+
+  background: rgba(234, 244, 238, 0.92);
+  border: 1px solid rgba(207, 227, 216, 1);
+  color: rgba(47, 107, 79, 1);
+
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+/* debug оставляем как было */
+.dealBadgeDebug {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 6;
+
+  padding: 6px 10px;
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  background: rgba(255, 230, 230, 0.92);
+  border: 1px solid rgba(255, 170, 170, 1);
+  color: rgba(120, 0, 0, 0.9);
+
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* ---------- STATUS UI: Reserved / Sold ---------- */
+
+.imageSold {
+  filter: saturate(0.92) brightness(0.96);
+}
+
+/* RESERVED — тонкая полоса по низу фото (аккуратно и “премиально”) */
+.reservedBar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  /* ✅ выравнивание текста идеально по центру */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+
+  height: 28px;              /* ✅ фиксируем высоту, чтобы не “раздувалась” */
+  padding: 0 12px;           /* ✅ без вертикального padding */
+
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+
+  color: rgba(28, 28, 28, 0.82);
+  background: rgba(255, 255, 255, 0.68);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* SOLD — диагональная лента-штамп через фото (стабильно на любых размерах) */
+.soldStamp {
+  position: absolute;
+
+  /* ✅ всегда “в углу”, а не плавает по высоте */
+  top: 105px;
+  left: -56px;
+
+  z-index: 4;
+
+  width: 240px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transform: rotate(-38deg);
+  transform-origin: left top;
+
+  background: rgba(190, 54, 54, 0.88);
+  border: 1px solid rgba(150, 35, 35, 0.95);
+  color: #fff;
+
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-size: 14px;
+
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+  pointer-events: none;
+}
+
+/* ✅ внутренний span можно оставить, но делаем его лёгким, чтобы не “перегружал” */
+.soldStamp > span {
+  display: block;
+  padding: 6px 12px;
+
+  background: rgba(180, 30, 30, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+
+  box-shadow: none;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }

@@ -4,6 +4,7 @@ import Featured from "@/components/Featured/Featured";
 import Services from "@/components/Services/Services";
 import About from "@/components/About/About";
 import Contact from "@/components/Contact/Contact";
+import Footer from "@/components/Footer/Footer";
 
 import { getDictionary, isLocale, type Locale } from "@/i18n/dictionaries";
 import { getFeaturedItems } from "@/app/lib/publicFeatured";
@@ -28,7 +29,7 @@ export default async function Page({
         <Featured lang={lang === "es" ? "es" : "en"} t={t.featured} items={featuredItems} />
         <Services t={t.services} />
         <About t={t.about} />
-        <Contact t={t.contact} />
+        <Contact t={t.contact} lang={lang === "es" ? "es" : "en"} />
       </main>
     </>
   );

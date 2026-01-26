@@ -24,16 +24,33 @@
     "card": {
       "beds": "Beds",
       "baths": "Baths",
-      "details": "View Details"
+      "details": "View Details",
+      "forSale": "For Sale",
+      "forRent": "For Rent",
+      "newBuild": "New build",
+      "reserved": "Reserved",
+      "sold": "Sold"
     }
   },
   "services": {
     "title": "Our Services",
     "subtitle": "Personalized real estate solutions",
     "items": [
-      { "title": "Property Sales", "text": "Helping you find the perfect home.", "icon": "🏡" },
-      { "title": "Investment Consulting", "text": "Expert advice on profitable investments.", "icon": "📈" },
-      { "title": "Legal Assistance", "text": "Full support with legal and paperwork.", "icon": "📄" }
+      {
+        "title": "Property Sales",
+        "text": "Helping you find the perfect home.",
+        "icon": "🏡"
+      },
+      {
+        "title": "Investment Consulting",
+        "text": "Expert advice on profitable investments.",
+        "icon": "📈"
+      },
+      {
+        "title": "Legal Assistance",
+        "text": "Full support with legal and paperwork.",
+        "icon": "📄"
+      }
     ]
   },
   "about": {
@@ -54,14 +71,64 @@
       "namePlaceholder": "Name",
       "phonePlaceholder": "+34 ...",
       "emailPlaceholder": "you@email.com",
-      "messagePlaceholder": "Tell us what you are looking for..."
+      "messagePlaceholder": "Tell us what you are looking for...",
+      "messageHint": "Tip: please enter at least 15 characters (more details = faster response).",
+      "messageMinError": "Please enter at least 15 characters in the message."
     },
     "info": {
       "title": "Contact",
       "whatsapp": "WhatsApp Us",
       "note": "We typically reply within a few hours during business days."
+    }
+  },
+
+  "footer": {
+    "tagline": "Your Home, Clearly Guided",
+    "locationLine": "Costa del Sol • Spain",
+    "navTitle": "Links",
+    "nav": {
+      "home": "Home",
+      "properties": "Properties",
+      "services": "Services",
+      "about": "About",
+      "contact": "Contact"
     },
-    "footerRights": "All rights reserved"
+    "socialTitle": "Social",
+    "socials": {
+      "instagram": "Instagram (soon)",
+      "facebook": "Facebook (soon)",
+      "linkedin": "LinkedIn (soon)"
+    },
+    "legal": {
+      "privacy": "Privacy",
+      "cookies": "Cookies",
+      "terms": "Terms",
+      "manageCookies": "Manage cookies"
+    },
+    "rights": "All rights reserved"
+  },
+  "cookies": {
+    "consent": {
+      "bannerText": "We use cookies to improve your experience. You can accept all cookies, reject non-essential cookies, or manage your preferences.",
+      "acceptAll": "Accept all",
+      "rejectAll": "Reject non-essential",
+      "manage": "Manage cookies",
+
+      "modalTitle": "Cookie preferences",
+      "modalText": "Choose which cookies you allow. Necessary cookies are always enabled.",
+
+      "necessaryTitle": "Necessary",
+      "necessaryDesc": "Required for the website to work properly.",
+
+      "analyticsTitle": "Analytics",
+      "analyticsDesc": "Helps us understand how the site is used.",
+
+      "marketingTitle": "Marketing",
+      "marketingDesc": "Helps us show relevant ads and measure campaigns.",
+
+      "save": "Save",
+      "close": "Close"
+    }
   },
   "seo": {
     "siteName": "Grahalia Estates",

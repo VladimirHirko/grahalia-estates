@@ -1,0 +1,1 @@
+ALTER TABLE "properties" ADD COLUMN "deal_type" varchar(8) DEFAULT 'sale' NOT NULL;
